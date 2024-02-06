@@ -1,15 +1,16 @@
+using DataLayer.EfClasses;
 using Microsoft.EntityFrameworkCore;
-using SavourOdessa.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-//builder.Services.AddDbContext<DataContext>(opts => {
-//    opts.UseNpgsql(
-//    builder.Configuration["ConnectionStrings:SavourOdessaConnection"]);
-//    opts.EnableSensitiveDataLogging(true);
-//});
+builder.Services.AddDbContext<DataContext>(opts =>
+{
+    opts.UseNpgsql(
+    builder.Configuration["ConnectionStrings:DefaultConnection"]);
+    opts.EnableSensitiveDataLogging(true);
+});
 
 var app = builder.Build();
 
