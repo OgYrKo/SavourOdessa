@@ -1,4 +1,6 @@
-﻿namespace DataLayer.EfClasses;
+﻿using NpgsqlTypes;
+
+namespace DataLayer.EfClasses;
 
 public partial class Restauranttable
 {
