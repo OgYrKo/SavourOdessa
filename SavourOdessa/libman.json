@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "rateYo@2.3.4",
+      "destination": "wwwroot/lib/rateYo/"
+    }
+  ]
+}

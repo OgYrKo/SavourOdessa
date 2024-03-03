@@ -1,0 +1,35 @@
+﻿ @model IEnumerable<ServiceLayer.RestaurantServices.RestaurantListDto>
+
+@{
+    ViewData["Title"] = "List";
+}
+
+<ul class="cards">
+    @foreach (var item in Model)
+    {
+        <li>
+            <a href="" class="card">
+                <img src="@Url.Content(item.Photo)" class="card__image" alt="Restaurant Photo" />
+                <div class="card__overlay">
+                    <div class="card__header">
+                        <div class="card__header-text">
+                            <h3 class="card__title">@item.Restaurantname</h3>
+
+                            @for (int i = 0; i < (int)item.AverageRating; i++)
+                            {
+                                <span class="card__status fa fa-star checked"></span>
+                            }
+                            @for (int i = (int)item.AverageRating; i < 5; i++)
+                            {
+                                <span class="card__status fa fa-star"></span>
+                            }
+                            <span class="card__status">@item.AverageRating.ToString("0.00") stars</span>
+                        </div>
+                    </div>
+                    <p class="card__description">@item.Address</p>
+                </div>
+            </a>
+
+        </li>
+    }
+</ul>
