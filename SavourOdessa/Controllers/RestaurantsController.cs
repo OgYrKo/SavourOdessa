@@ -79,7 +79,7 @@ namespace SavourOdessa.Controllers
         private (DateTime Start,DateTime End) GetOpeningHours(DateTime date)
         {
             DateTime start = DateTime.Now.Date.AddHours(6);
-            DateTime end = DateTime.Now.Date.AddDays(1);
+            DateTime end = DateTime.Now.Date.AddDays(1).AddHours(-1);
             return (start, end);
         }
 

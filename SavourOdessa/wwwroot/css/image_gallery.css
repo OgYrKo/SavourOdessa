@@ -4,7 +4,6 @@
 
 /* Position the image container (needed to position the left and right arrows) */
 .container {
-    margin-top: 15vh;
     position: relative;
     padding: 0;
 }

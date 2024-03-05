@@ -11,77 +11,73 @@
     <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
 }
 
+<div class="container">
+    <main role="main" class="pb-3">
 
-<div>
-    <!-- Container for the image gallery -->
-    <div class="container">
-        <div class="head-container">
-            @for (int i = 0; i < Model.Photos.Length; i++)
-            {
-                <!-- Full-width images with number text -->
-                <div class="mySlides">
-                    <div class="numbertext">@(i + 1) / @Model.Photos.Length</div>
-                    <img class="head-img" src="@Url.Content(Model.Photos[i])">
+        <div>
+            <!-- Container for the image gallery -->
+            <div class="container">
+                <div class="head-container">
+                    @for (int i = 0; i < Model.Photos.Length; i++)
+                    {
+                        <!-- Full-width images with number text -->
+                        <div class="mySlides">
+                            <div class="numbertext">@(i + 1) / @Model.Photos.Length</div>
+                            <img class="head-img" src="@Url.Content(Model.Photos[i])">
+                        </div>
+                    }
                 </div>
-            }
-        </div>
-        <!-- Next and previous buttons -->
-        @if (Model.Photos.Length > 1)
-        {
-            <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
-            <a class="next" onclick="plusSlides(1)">&#10095;</a>
+                <!-- Next and previous buttons -->
+                @if (Model.Photos.Length > 1)
+                {
+                    <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+                    <a class="next" onclick="plusSlides(1)">&#10095;</a>
 
-            @*  <!-- Thumbnail images -->
-        <div class="row">
-        @for (int i = 0; i < Model.Photos.Length; i++)
-        {
-        <div class="column">
-        <img class="demo cursor" src="@Url.Content(Model.Photos[i])" style="height:100px" onclick="currentSlide(@(i+1))">
-        </div>
-        }
-        </div> *@
-        }
-    </div>
-    <div>
-        <h3 style="display:inline">@Html.DisplayFor(model => model.RestaurantName)</h3>
-        @if (Model.IsOpened)
-        {
-            <span style="color:green">Open</span>
-            @if (@Model.CloseTime != null)
-            {
-                <span style="color:green"> until @Model.CloseTime?.ToString("hh:mm tt")</span>
+                }
+            </div>
+            <div>
+                <h3 style="display:inline">@Html.DisplayFor(model => model.RestaurantName)</h3>
+                @if (Model.IsOpened)
+                {
+                    <span style="color:green">Open</span>
+                    @if (@Model.CloseTime != null)
+                    {
+                        <span style="color:green"> until @Model.CloseTime?.ToString("HH:mm")</span>
+                    }
+                }
+                else
+                {
+                    <span style="color:red">Closed</span>
+                    @if (@Model.OpenTime != null)
+                    {
+                        <span style="color:red"> until @Model.OpenTime?.ToString("HH:mm")</span>
+                    }
+                }
+            </div>
+            <div>
+                <span class="card__status checked">@Model.AverageRating.ToString("0.00")</span>
+                @for (int i = 0; i < (int)Model.AverageRating; i++)
+                {
+                    <span class="card__status fa fa-star checked"></span>
+                }
+                @for (int i = (int)Model.AverageRating; i < 5; i++)
+                {
+                    <span class="card__status fa fa-star"></span>
+                }
+            </div>
+            <div>
+                <i class='fas fa-map-marker-alt'></i>
+                <span>@Html.DisplayFor(model => model.Address)</span>
+            </div>
+            <a asp-controller="Menu" asp-action="Index" asp-route-id="@Model.RestaurantId">
+                <i class='fas fa-utensils'></i>
+                Menu
+            </a>
+            @{
+                @await Html.PartialAsync("_Comments", Model.Comments)
             }
-        }
-        else
-        {
-            <span style="color:red">Closed</span>
-            @if (@Model.OpenTime != null)
-            {
-                <span style="color:red"> until @Model.OpenTime?.ToString("hh:mm tt")</span>
-            }
-        }
-    </div>
-    <div>
-        <span class="card__status checked">@Model.AverageRating.ToString("0.00")</span>
-        @for (int i = 0; i < (int)Model.AverageRating; i++)
-        {
-            <span class="card__status fa fa-star checked"></span>
-        }
-        @for (int i = (int)Model.AverageRating; i < 5; i++)
-        {
-            <span class="card__status fa fa-star"></span>
-        }
-    </div>
-    <div>
-        <i class='fas fa-map-marker-alt'></i>
-        <span>@Html.DisplayFor(model => model.Address)</span>
-    </div>
-    <a asp-controller="Menu" asp-action="Index" asp-route-id="@Model.RestaurantId">
-        <i class='fas fa-utensils'></i>
-        Menu
-    </a>
-    @{
-        @await Html.PartialAsync("_Comments", Model.Comments)
-    }
 
+        </div>
+
+    </main>
 </div>

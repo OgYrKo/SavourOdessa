@@ -1,0 +1,33 @@
+﻿@model SavourOdessa.Models.Dishes.DishListViewModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+@section Styles {
+    <link rel="stylesheet" type="text/css" href="~/css/dish-card.css">
+}
+
+<div class="main">
+    @foreach (var dishesByType in Model.DishesByTypes)
+    {
+        <h3>@dishesByType.Key</h3>
+        <ul class="cards">
+            @foreach (var item in dishesByType.Value)
+            {
+                <a class="link-card" asp-controller="Menu" asp-action="Details" asp-route-id="@item.Id">
+                <li class="cards_item">
+                    <div class="card">
+                        <div class="card_image"><img src="@Url.Content(item.Image)" class="card__image" alt="Dish photo"></div>
+                        <div class="card_content">
+                            <h2 class="card_title">@item.Name &#x2022; $@item.Price</h2>
+                            <div class="card_text">
+                                <p>@item.Description</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                </a>
+            }
+        </ul>
+    }
+</div>
