@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <Folder Include="Areas\Admin\Models\" />
+    <Folder Include="wwwroot\images\Dishes\" />
     <Folder Include="wwwroot\images\Restaurants\" />
   </ItemGroup>
 

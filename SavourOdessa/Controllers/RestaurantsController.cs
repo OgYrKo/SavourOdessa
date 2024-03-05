@@ -1,10 +1,9 @@
 ﻿using DataLayer.EfClasses;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using SavourOdessa.Models.Restaurants;
 using ServiceLayer.RestaurantServices;
-using ServiceLayer.RestaurantServices.Concrete;
-using System.ComponentModel;
+
 
 namespace SavourOdessa.Controllers
 {
@@ -37,7 +36,71 @@ namespace SavourOdessa.Controllers
             return View(restaurantListDto);
         }
 
-        private string GetFirstImage(string restaurantName)
+        public async Task<ActionResult> Details(int id)
+        {
+            var restaurant = _context.Restaurants
+                                    .Include(r => r.PostcodeNavigation)
+                                    .Include(r => r.PostcodeNavigation.Cityincountry)
+                                    .Include(r => r.PostcodeNavigation.Cityincountry.City)
+                                    .Include(r => r.PostcodeNavigation.Cityincountry.Country)
+                                    .FirstOrDefaultAsync(r => r.Restaurantid == id)
+                                    .Result;
+            if(restaurant == null) return NotFound();
+            var comments = _context.Comments
+                                    .Include(c => c.User)
+                                    .Where(c => c.Restaurantid == id)
+                                    .ToArrayAsync()
+                                    .Result;
+            var commentsDto = new CommentListItemViewModel[comments.Length];
+            for (int i = 0; i < comments.Length; i++)
+            {
+                commentsDto[i] = new CommentListItemViewModel(comments[i].User.Username,comments[i].Commentdate, comments[i].Commenttext);
+            }
+
+            if (restaurant == null) return NotFound();
+            
+
+            var openingHours = GetOpeningHours(DateTime.Now);
+            
+
+            
+            return View(new RestaurantDetailViewModel(restaurant.Restaurantid,
+                                                            restaurant.Restaurantname,
+                                                            GetAddress(restaurant),
+                                                            GetImages(restaurant.Restaurantname).ToArray(),
+                                                            await GetAverage(restaurant),
+                                                            openingHours.Start<=DateTime.Now&&DateTime.Now<=openingHours.End,
+                                                            openingHours.Start,
+                                                            openingHours.End,
+                                                            new CommentListViewModel(commentsDto)));
+        }
+
+        //TODO: create a stored procedure for this
+        private (DateTime Start,DateTime End) GetOpeningHours(DateTime date)
+        {
+            DateTime start = DateTime.Now.Date.AddHours(6);
+            DateTime end = DateTime.Now.Date.AddDays(1);
+            return (start, end);
+        }
+
+        private IEnumerable<string> GetImages(string restaurantName)
+        {
+            string restaurantsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "Restaurants");
+            string restaurantPath = Path.Combine(restaurantsPath, restaurantName);
+            if (!Directory.Exists(restaurantPath)) 
+            { 
+                yield return "~/images/Restaurants/default.png";
+                yield break; 
+            }
+            
+            string[] images = Directory.GetFiles(restaurantPath, "*.*", SearchOption.AllDirectories);
+            foreach (var image in images)
+            {
+                yield return "~/" + Path.GetRelativePath(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), image).Replace("\\", "/");
+            }
+        }
+
+            private string GetFirstImage(string restaurantName)
         {
             string restaurantsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "Restaurants");
             string restaurantPath = Path.Combine(restaurantsPath, restaurantName);
