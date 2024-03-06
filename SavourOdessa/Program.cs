@@ -5,6 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddServerSideBlazor();
 builder.Services.AddDbContext<DataContext>(opts =>
 {
     opts.UseNpgsql(
@@ -46,5 +47,5 @@ app.UseEndpoints(endpoints =>
         areaName: "Admin",
         pattern: "Admin/{controller=Home}/{action=Index}/{id?}");
 });
-
+app.MapBlazorHub();
 app.Run();

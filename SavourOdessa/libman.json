@@ -5,6 +5,10 @@
     {
       "library": "rateYo@2.3.4",
       "destination": "wwwroot/lib/rateYo/"
+    },
+    {
+      "library": "bootstrap@5.3.3",
+      "destination": "wwwroot/lib/bootstrap/"
     }
   ]
 }

@@ -1,0 +1,87 @@
+﻿<h3>BookingTables Razor Component @RestaurantId</h3>
+<div>
+    <select name="tables" @bind="SelectedTableId">
+        <option disabled selected value="-1">Select table</option>
+        @foreach (Restauranttable table in Tables ?? new Restauranttable[] { })
+        {
+            <option value="@table.Tableid">
+                @table.Tableid
+            </option>
+        }
+    </select>
+</div>
+
+
+
+@if (SelectedTableId != -1)
+{
+    <input type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" value="@SelectedDate" @onchange="UpdateAvailableTime" />
+    <div class="row">
+        @foreach (var (time, available) in AvailableTime)
+        {
+            <div class="col">
+                <button class="btn btn-outline-primary mb-2" disabled="@(!available)" style="border-color:#90D1CB;color:#90D1CB">@time.ToString("HH:mm")</button>
+            </div>
+        }
+    </div>
+}
+
+
+@code {
+    [Inject]
+    public DataContext? Context { get; set; }
+
+    [Parameter]
+    public int RestaurantId { get; set; }
+
+    public Restauranttable[]? Tables;
+    private int _selectedTableId = -1;
+    public int SelectedTableId
+    {
+        get => _selectedTableId;
+        set
+        {
+            _selectedTableId = value;
+            UpdateAvailableTime();
+        }
+    }
+    public string SelectedDate = DateTime.Now.ToString("yyyy-MM-dd");
+    IEnumerable<(DateTime, bool)> AvailableTime = new (DateTime, bool)[] { };
+
+    protected override void OnInitialized()
+    {
+        Tables = Context?.Restauranttables.Where(t => t.Restaurantid == RestaurantId).ToArray();
+    }
+
+    public void UpdateAvailableTime()
+    {
+        int tableId = SelectedTableId;
+        DateTime date = DateTime.Parse(SelectedDate);
+        var (start, end) = GetOpeningHours(date);
+        Tablereservation[] tableReservations = Context?.Tablereservations.Where(r => r.Reservationtime.Date == date.Date && r.Tableid == tableId).ToArray() ?? new Tablereservation[] { };
+
+        List<(DateTime, bool)> result = new List<(DateTime, bool)>();
+        for (DateTime i = start; i < end; i = i.AddMinutes(15))
+        {
+            if (i < DateTime.Now)
+            {
+                result.Add((i, false));
+            }
+            else if (tableReservations.Any(r => r.Reservationtime <= i && i < r.Reservationtime + r.Duration))
+            {
+                result.Add((i, false));
+            }
+            else
+                result.Add((i, true));
+        }
+        AvailableTime = result;
+    }
+
+    //TODO: create a stored procedure for this
+    private (DateTime Start, DateTime End) GetOpeningHours(DateTime date)
+    {
+        DateTime start = DateTime.Now.Date.AddHours(6);
+        DateTime end = DateTime.Now.Date.AddDays(1).AddHours(-1);
+        return (start, end);
+    }
+}

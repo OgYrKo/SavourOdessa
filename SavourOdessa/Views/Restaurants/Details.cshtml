@@ -69,10 +69,10 @@
                 <i class='fas fa-map-marker-alt'></i>
                 <span>@Html.DisplayFor(model => model.Address)</span>
             </div>
-            <a asp-controller="Menu" asp-action="Index" asp-route-id="@Model.RestaurantId">
-                <i class='fas fa-utensils'></i>
-                Menu
-            </a>
+            <a asp-controller="Menu" asp-action="Index" asp-route-id="@Model.RestaurantId"><i class='fas fa-utensils'></i> Menu</a>
+            <div></div>
+            <a asp-controller="Booking" asp-action="BookingTables" asp-route-id="@Model.RestaurantId"><i class="far fa-calendar"></i> Book table</a>
+
             @{
                 @await Html.PartialAsync("_Comments", Model.Comments)
             }

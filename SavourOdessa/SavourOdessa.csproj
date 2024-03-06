@@ -20,7 +20,6 @@
   <ItemGroup>
     <Folder Include="Areas\Admin\Models\" />
     <Folder Include="Models\Tables\" />
-    <Folder Include="Views\Booking\" />
     <Folder Include="wwwroot\images\Dishes\5\" />
     <Folder Include="wwwroot\images\Restaurants\" />
   </ItemGroup>

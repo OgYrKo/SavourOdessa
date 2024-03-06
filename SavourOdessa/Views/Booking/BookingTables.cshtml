@@ -1,0 +1,9 @@
+﻿@model int
+@section Styles {
+    <base href="~/" />
+}
+@section Scripts {
+    <script src="_framework/blazor.server.js"></script>
+}
+
+<component type="typeof(SavourOdessa.Blazor.BookingTables)" render-mode="Server" param-restaurantid="@Model" />
