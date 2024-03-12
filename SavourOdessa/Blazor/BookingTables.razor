@@ -1,11 +1,26 @@
 ﻿@inject IJSRuntime JSRuntime
+<h3>Book a table</h3>
+<div style="width:100vw;height:50vh;border:1px solid grey;">
+    <table width="100%" height="100%">
+        @for (int i = 0; i < TablesCountByY; i++)
+        {
+            <tr>
+                @for (int j = 0; j < TablesCountByX; j++)
+                {
+                    <td style="text-align: center;">
+                        <button class="group-btn btn" 
+                                style="border-color:#90D1CB;color:#90D1CB"
+                                @onclick="@(() => SelectedTableId = TablesId[j, i])">
+                            <p>Table #@Tables[TablesId[j, i]].Tableid</p>
+                            <p>Sits count: @Tables[TablesId[j, i]].Sitscount</p>
+                        </button>
+                    </td>
+                }
+            </tr>
+        }
+    </table>
+</div>
 
-<canvas id="myCanvas" style="width:100vw;height:50vh;border:1px solid grey;">
-    Your browser does not support the HTML canvas tag.
-</canvas>
-
-
-<h3>BookingTables Razor Component @RestaurantId</h3>
 <div>
     <select name="tables" @bind="SelectedTableId">
         <option disabled selected value="-1">Select table</option>
@@ -34,26 +49,28 @@
 }
 
 <script>
-    function updateValues(maxX, maxY, tableLocations) {
-        var canvas = document.getElementById("myCanvas");
-        var ctx = canvas.getContext("2d");
+    // Функция для выбора кнопки
+    function selectButton(selectedButton) {
+        // Получаем все кнопки в группе
+        var buttons = document.getElementsByClassName("group-btn");
 
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
-        var xUnit = canvas.width / 2 / maxX;
-        var yUnit = canvas.height / 2 / maxY;
-        for(var i = 0; i < tableLocations.length; i++) {
-            ctx.fillStyle = "#FF0000";
-            ctx.fillRect(xUnit * (tableLocations[i][0]-1) + xUnit / 4,
-                yUnit * (tableLocations[i][1] - 1) + yUnit / 4,
-                xUnit * (tableLocations[i][0] - 1) + 3 * xUnit / 4,
-                xUnit * (tableLocations[i][1] - 1) + 3 * xUnit / 4);
-        })
+        // Снимаем выделение со всех кнопок
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].classList.remove("selected");
+        }
 
-        ctx.fillStyle = "#FF0000";
-        ctx.fillRect(0, 0, xUnit, yUnit);
+        // Выделяем выбранную кнопку
+        buttons[selectedButton - 1].classList.add("selected");
     }
 </script>
+
+<style>
+    /* Стили для выделенной кнопки */
+    .selected {
+        background-color: #FFF8F8; 
+    }
+</style>
+
 
 @code {
     [Inject]
@@ -63,9 +80,9 @@
     public int RestaurantId { get; set; }
 
     public Restauranttable[]? Tables;
-    public int[][] TableLocations{ get; set; }
-    public double MaxX { get; set; } = 1;
-    public double MaxY { get; set; } = 1;
+    public double TablesCountByX { get; set; } = 1;
+    public double TablesCountByY { get; set; } = 1;
+    public int[,] TablesId = new int[,] { };
     private int _selectedTableId = -1;
     public int SelectedTableId
     {
@@ -73,6 +90,7 @@
         set
         {
             _selectedTableId = value;
+            JSRuntime.InvokeVoidAsync("selectButton", Tables[value].Tableid);
             UpdateAvailableTime();
         }
     }
@@ -82,29 +100,16 @@
     protected override void OnInitialized()
     {
         Tables = Context?.Restauranttables.Where(t => t.Restaurantid == RestaurantId).ToArray() ?? new Restauranttable[] { };
-        int[][] tableLocations = new int[Tables.Length][];
-        for (int i = 0; i < Tables.Length;i++)
+        for (int i = 0; i < Tables.Length; i++)
         {
-            MaxX = Math.Max(MaxX, Tables[i].Tablelocation.X);
-            MaxY = Math.Max(MaxY, Tables[i].Tablelocation.Y);
-            tableLocations[i] = new int[2];
-            tableLocations[i][0] = (int)Tables[i].Tablelocation.X;
-            tableLocations[i][1] = (int)Tables[i].Tablelocation.Y;
+            TablesCountByX = Math.Max(TablesCountByX, Tables[i].Tablelocation.X);
+            TablesCountByY = Math.Max(TablesCountByY, Tables[i].Tablelocation.Y);
         }
-        TableLocations = tableLocations;
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
+        TablesId = new int[(int)TablesCountByX, (int)TablesCountByY];
+        for (int i = 0; i < Tables.Length; i++)
         {
-            await UpdateCanvas();
+            TablesId[(int)(Tables[i].Tablelocation.X - 1), (int)(Tables[i].Tablelocation.Y - 1)] = i;
         }
-    }
-
-    public async Task UpdateCanvas()
-    {
-        await JSRuntime.InvokeVoidAsync("updateValues", MaxX, MaxY, TableLocations);
     }
 
     public void UpdateAvailableTime()
@@ -115,6 +120,7 @@
         Tablereservation[] tableReservations = Context?.Tablereservations.Where(r => r.Reservationtime.Date == date.Date && r.Tableid == tableId).ToArray() ?? new Tablereservation[] { };
 
         List<(DateTime, bool)> result = new List<(DateTime, bool)>();
+        end = end.AddHours(-1.5);
         for (DateTime i = start; i < end; i = i.AddMinutes(15))
         {
             if (i < DateTime.Now)
@@ -134,8 +140,8 @@
     //TODO: create a stored procedure for this
     private (DateTime Start, DateTime End) GetOpeningHours(DateTime date)
     {
-        DateTime start = DateTime.Now.Date.AddHours(6);
-        DateTime end = DateTime.Now.Date.AddDays(1).AddHours(-1);
+        DateTime start = date.AddHours(6);
+        DateTime end = date.AddDays(1).AddHours(-1);
         return (start, end);
     }
 }
