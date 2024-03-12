@@ -1,4 +1,5 @@
 ﻿@inject IJSRuntime JSRuntime
+@inject Microsoft.AspNetCore.Components.NavigationManager NavigationManager
 @if (SelectedTableIndex == -1)
 {
     <h3>Select a table</h3>
@@ -44,45 +45,31 @@ else if (SelectedTableIndex != -1 && SelectedTimeIndex == -1)
             </div>
         }
     </div>
-        <button @onclick="@(() => SelectedTableIndex = -1)">Go back</button>
+    <button @onclick="@(() => SelectedTableIndex = -1)">Go back</button>
+}
+else if (IsBooked==true)
+{
+    <h3>Table booked successfully</h3>
+    <button @onclick="@ReloadPage">Book another table</button>
+}
+else if(IsBooked==false)
+{
+    <h3>Something went wrong</h3>
+    <button @onclick="@ReloadPage">Try again</button>
 }
 else
 {
     <h3>Is everything correct?</h3>
     <p>Book table #@Tables[SelectedTableIndex].Tableid for @Tables[SelectedTableIndex].Sitscount persons on @AvailableTime[SelectedTimeIndex].Item1.ToString("d") at @AvailableTime[SelectedTimeIndex].Item1.ToString("t")</p>
 
-    <button>Book</button>
+    <button @onclick="@BookTable">Book</button>
     <button @onclick="@(() => SelectedTimeIndex = -1)">Go back</button>
 }
-
-<script>
-    // Функция для выбора кнопки
-    function selectButton(selectedButton) {
-        // Получаем все кнопки в группе
-        var buttons = document.getElementsByClassName("group-btn");
-
-        // Снимаем выделение со всех кнопок
-        for (var i = 0; i < buttons.length; i++) {
-            buttons[i].classList.remove("selected");
-        }
-
-        // Выделяем выбранную кнопку
-        buttons[selectedButton - 1].classList.add("selected");
-    }
-</script>
-
-<style>
-    /* Стили для выделенной кнопки */
-    .selected {
-        background-color: #FFF8F8;
-    }
-</style>
-
 
 @code {
     [Inject]
     public DataContext? Context { get; set; }
-
+    public bool? IsBooked { get; set; } = null;
     [Parameter]
     public int RestaurantId { get; set; }
 
@@ -97,8 +84,8 @@ else
         set
         {
             _selectedTableIndex = value;
-            JSRuntime.InvokeVoidAsync("selectButton", Tables[value].Tableid);
-            UpdateAvailableTime();
+            if (value != -1)
+                UpdateAvailableTime();
         }
     }
     public DateTime _selectedDate = DateTime.Now;
@@ -153,6 +140,31 @@ else
         }
         AvailableTime = result;
     }
+
+    public void BookTable()
+    {
+        try
+        {
+
+            Tablereservation r = new Tablereservation
+                {
+                    Tableid = Tables[SelectedTableIndex].Tableid,
+                    Reservationtime = AvailableTime[SelectedTimeIndex].Item1,
+                    Duration = TimeSpan.FromHours(1),
+                    Userid = Context?.Systemusers.First().Userid ?? 1
+                };
+            Context!.Tablereservations.Add(r);
+            Context.SaveChanges();
+            IsBooked = true;
+        }
+        catch
+        {
+            IsBooked = false;
+        }
+    }
+
+
+    private void ReloadPage() => NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
 
     //TODO: create a stored procedure for this
     private (DateTime Start, DateTime End) GetOpeningHours(DateTime date)
