@@ -1,51 +1,58 @@
 ﻿@inject IJSRuntime JSRuntime
-<h3>Book a table</h3>
-<div style="width:100vw;height:50vh;border:1px solid grey;">
-    <table width="100%" height="100%">
-        @for (int i = 0; i < TablesCountByY; i++)
-        {
-            <tr>
-                @for (int j = 0; j < TablesCountByX; j++)
-                {
-                    <td style="text-align: center;">
-                        <button class="group-btn btn" 
-                                style="border-color:#90D1CB;color:#90D1CB"
-                                @onclick="@(() => SelectedTableId = TablesId[j, i])">
-                            <p>Table #@Tables[TablesId[j, i]].Tableid</p>
-                            <p>Sits count: @Tables[TablesId[j, i]].Sitscount</p>
-                        </button>
-                    </td>
-                }
-            </tr>
-        }
-    </table>
-</div>
-
-<div>
-    <select name="tables" @bind="SelectedTableId">
-        <option disabled selected value="-1">Select table</option>
-        @foreach (Restauranttable table in Tables ?? new Restauranttable[] { })
-        {
-            <option value="@table.Tableid">
-                @table.Tableid
-            </option>
-        }
-    </select>
-</div>
-
-
-
-@if (SelectedTableId != -1)
+@if (SelectedTableIndex == -1)
 {
-    <input type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" value="@SelectedDate" @onchange="UpdateAvailableTime" />
+    <h3>Select a table</h3>
+    <div style="width:100vw;height:50vh;border:1px solid grey;">
+        <table width="100%" height="100%">
+            @for (int i = 0; i < TablesCountByY; i++)
+            {
+                <tr>
+                    @for (int j = 0; j < TablesCountByX; j++)
+                    {
+                        int localI = i; // Локальная переменная для захвата значения i
+                        int localJ = j; // Локальная переменная для захвата значения j
+                        <td style="text-align: center;">
+                            <button class="group-btn btn"
+                                    style="border-color:#90D1CB;color:#90D1CB"
+                                    @onclick="@(() => SelectedTableIndex = TablesId[localJ, localI])">
+                                <p>Table #@Tables[TablesId[localJ, localI]].Tableid</p>
+                                <p>Sits count: @Tables[TablesId[localJ, localI]].Sitscount</p>
+                            </button>
+                        </td>
+                    }
+                </tr>
+            }
+        </table>
+    </div>
+}
+else if (SelectedTableIndex != -1 && SelectedTimeIndex == -1)
+{
+    <h3>Select time</h3>
+    <input type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" @bind="@SelectedDate" />
     <div class="row">
-        @foreach (var (time, available) in AvailableTime)
+        @for (int i = 0; i < AvailableTime.Count; i++)
         {
+            var (time, available) = AvailableTime[i];
+            int localI = i;
             <div class="col">
-                <button class="btn btn-outline-primary mb-2" disabled="@(!available)" style="border-color:#90D1CB;color:#90D1CB">@time.ToString("HH:mm")</button>
+                <button class="btn btn-outline-primary mb-2"
+                        @onclick="@(() => SelectedTimeIndex = localI)"
+                        disabled="@(!available)"
+                        style="border-color:#90D1CB;color:#90D1CB">
+                    @time.ToString("HH:mm")
+                </button>
             </div>
         }
     </div>
+        <button @onclick="@(() => SelectedTableIndex = -1)">Go back</button>
+}
+else
+{
+    <h3>Is everything correct?</h3>
+    <p>Book table #@Tables[SelectedTableIndex].Tableid for @Tables[SelectedTableIndex].Sitscount persons on @AvailableTime[SelectedTimeIndex].Item1.ToString("d") at @AvailableTime[SelectedTimeIndex].Item1.ToString("t")</p>
+
+    <button>Book</button>
+    <button @onclick="@(() => SelectedTimeIndex = -1)">Go back</button>
 }
 
 <script>
@@ -67,7 +74,7 @@
 <style>
     /* Стили для выделенной кнопки */
     .selected {
-        background-color: #FFF8F8; 
+        background-color: #FFF8F8;
     }
 </style>
 
@@ -83,19 +90,29 @@
     public double TablesCountByX { get; set; } = 1;
     public double TablesCountByY { get; set; } = 1;
     public int[,] TablesId = new int[,] { };
-    private int _selectedTableId = -1;
-    public int SelectedTableId
+    private int _selectedTableIndex = -1;
+    public int SelectedTableIndex
     {
-        get => _selectedTableId;
+        get => _selectedTableIndex;
         set
         {
-            _selectedTableId = value;
+            _selectedTableIndex = value;
             JSRuntime.InvokeVoidAsync("selectButton", Tables[value].Tableid);
             UpdateAvailableTime();
         }
     }
-    public string SelectedDate = DateTime.Now.ToString("yyyy-MM-dd");
-    IEnumerable<(DateTime, bool)> AvailableTime = new (DateTime, bool)[] { };
+    public DateTime _selectedDate = DateTime.Now;
+    public DateTime SelectedDate
+    {
+        get => _selectedDate;
+        set
+        {
+            _selectedDate = value;
+            UpdateAvailableTime();
+        }
+    }
+    public int SelectedTimeIndex = -1;
+    List<(DateTime, bool)> AvailableTime = new();
 
     protected override void OnInitialized()
     {
@@ -114,8 +131,8 @@
 
     public void UpdateAvailableTime()
     {
-        int tableId = SelectedTableId;
-        DateTime date = DateTime.Parse(SelectedDate);
+        int tableId = Tables[SelectedTableIndex].Tableid;
+        DateTime date = SelectedDate.Date;
         var (start, end) = GetOpeningHours(date);
         Tablereservation[] tableReservations = Context?.Tablereservations.Where(r => r.Reservationtime.Date == date.Date && r.Tableid == tableId).ToArray() ?? new Tablereservation[] { };
 
