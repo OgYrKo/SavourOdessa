@@ -1,0 +1,88 @@
+﻿@model SavourOdessa.Areas.Admin.Models.Restaurants.RestaurantEditViewModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>RestaurantEditViewModel</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div class="form-group">
+                <label asp-for="RestaurantName" class="control-label"></label>
+                <input asp-for="RestaurantName" class="form-control" />
+                <span asp-validation-for="RestaurantName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="SelectedCountryId" class="control-label"></label>
+                <select id="selectedCountry" class="form-control" asp-for="SelectedCountryId">
+                    @foreach (var country in Model.Countries)
+                    {
+                        <option value="@country.CountryId">@country.CountryName</option>
+                    }
+                </select>
+                <span asp-validation-for="SelectedCountryId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="SelectedCityId" class="control-label"></label>
+                <select id="selectedCity" class="form-control" asp-for="SelectedCityId">
+                    @foreach (var city in Model.Cities)
+                    {
+                        <option value="@city.CityId">@city.CityName</option>
+                    }
+                </select>
+                <span asp-validation-for="SelectedCityId" class="text-danger"></span>
+            </div>
+
+
+            <div class="form-group">
+                <label asp-for="Street" class="control-label"></label>
+                <input asp-for="Street" class="form-control" />
+                <span asp-validation-for="Street" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="HouseNumber" class="control-label"></label>
+                <input asp-for="HouseNumber" class="form-control" />
+                <span asp-validation-for="HouseNumber" class="text-danger"></span>
+            </div>
+            <input type="hidden" name="Cities" value="@Json.Serialize(Model.Cities)" />
+            <input type="hidden" name="Countries" value="@Json.Serialize(Model.Countries)" />
+
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById("selectedCountry").addEventListener("change", function () {
+            var countryId = parseInt(this.value);
+            var cities = @Html.Raw(Json.Serialize(Model.Cities));
+            var cityDropdown = document.getElementById("selectedCity");
+            cityDropdown.innerHTML = ""; // Очищаем список городов
+
+            console.log("Filter by country id:\n");
+            // Фильтруем города по выбранной стране и добавляем их в список
+            cities.filter(function (city) {
+                return city.countryId == countryId;
+            }).forEach(function (city) {
+                var option = document.createElement("option");
+                option.value = city.cityId;
+                option.textContent = city.cityName;
+                cityDropdown.appendChild(option);
+            });
+        });
+
+    </script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

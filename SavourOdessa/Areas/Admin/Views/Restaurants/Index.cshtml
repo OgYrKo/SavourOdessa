@@ -1,4 +1,4 @@
-﻿@model IEnumerable<ServiceLayer.RestaurantServices.RestaurantListDto>
+﻿@model IEnumerable<SavourOdessa.Areas.Admin.Models.Restaurants.RestaurantListItemViewModel>
 
 @{
     ViewData["Title"] = "Index";
@@ -13,53 +13,30 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Restaurantid)
+                @Html.DisplayNameFor(model => model.RestaurantId)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Restaurantname)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Address)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Photo)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AverageRating)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsVerified)
+                @Html.DisplayNameFor(model => model.RestaurantName)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Restaurantid)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Restaurantname)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Address)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Photo)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AverageRating)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsVerified)
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.RestaurantId)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.RestaurantName)
+                </td>
+                <td>
+                    @Html.ActionLink("Edit", "Edit", new { id = item.RestaurantId }) |
+                    @Html.ActionLink("Details", "Details", new { id = item.RestaurantId }) |
+                    @Html.ActionLink("Delete", "Delete", new { id = item.RestaurantId })
+                </td>
+            </tr>
+        }
     </tbody>
 </table>

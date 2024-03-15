@@ -1,15 +1,36 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using DataLayer.EfClasses;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using SavourOdessa.Areas.Admin.Models.Restaurants;
 
 namespace SavourOdessa.Areas.Admin.Controllers
 {
     [Area("Admin")]
     public class RestaurantsController : Controller
     {
-        // GET: RestaurantsController
-        public ActionResult Index()
+        private readonly DataContext _context;
+        public RestaurantsController(DataContext context)
         {
-            return View();
+            _context = context;
+        }
+        // GET: RestaurantsController
+        public async Task<IActionResult> Index()
+        {
+            var restauranrs = await _context.Restaurants
+                                            .ToListAsync();
+            List<RestaurantListItemViewModel> restaurantListViewModel = new();
+            foreach (var restaurant in restauranrs)
+            {
+                restaurantListViewModel.Add(new RestaurantListItemViewModel()
+                {
+                    RestaurantId = restaurant.Restaurantid,
+                    RestaurantName = restaurant.Restaurantname
+                });
+            }
+
+            return View(restaurantListViewModel);
         }
 
         // GET: RestaurantsController/Details/5
@@ -19,9 +40,42 @@ namespace SavourOdessa.Areas.Admin.Controllers
         }
 
         // GET: RestaurantsController/Create
-        public ActionResult Create()
+        public async Task<ActionResult> Create()
         {
-            return View();
+            var countries = await _context.Countries
+                                    .ToListAsync();
+
+            var citiesInCountries = await _context.Cityincountries
+                                            .Include(c => c.City)
+                                            .Include(c => c.Country)
+                                            .ToListAsync();
+
+            var cityItemsViewModel = new CityItemViewModel[citiesInCountries.Count];
+            for (int i = 0; i < citiesInCountries.Count; i++)
+            {
+                cityItemsViewModel[i] = new CityItemViewModel()
+                {
+                    CityId = citiesInCountries[i].City.Cityid,
+                    CityName = citiesInCountries[i].City.Cityname,
+                    CountryId = citiesInCountries[i].Country.Countryid
+                };
+            }
+            var countryItemsViewModel = new CountryItemViewModel[countries.Count];
+            for (int i = 0; i < countries.Count; i++)
+            {
+                countryItemsViewModel[i] = new CountryItemViewModel()
+                {
+                    CountryId = countries[i].Countryid,
+                    CountryName = countries[i].Countryname
+                };
+            }
+
+            var viewModel = new RestaurantEditViewModel()
+            {
+                Cities = cityItemsViewModel,
+                Countries = countryItemsViewModel
+            };
+            return View("Edit");
         }
 
         // POST: RestaurantsController/Create
@@ -40,21 +94,75 @@ namespace SavourOdessa.Areas.Admin.Controllers
         }
 
         // GET: RestaurantsController/Edit/5
-        public ActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            return View();
+            var restaurant = await _context.Restaurants
+                                    .Include(c => c.PostcodeNavigation)
+                                    .Include(c => c.PostcodeNavigation.Cityincountry)
+                                    .Include(c => c.PostcodeNavigation.Cityincountry.Country)
+                                    .Include(c => c.PostcodeNavigation.Cityincountry.City)
+                                    .FirstOrDefaultAsync(c => c.Restaurantid == id);
+
+            var countries = await _context.Countries
+                                    .ToListAsync();
+
+            var citiesInCountries = await _context.Cityincountries
+                                            .Include(c => c.City)
+                                            .Include(c => c.Country)
+                                            .ToListAsync();
+            if (restaurant == null)
+            {
+                return NotFound();
+            }
+            var cityItemsViewModel = new CityItemViewModel[citiesInCountries.Count];
+            for (int i = 0; i < citiesInCountries.Count;i++)
+            {
+                cityItemsViewModel[i]=new CityItemViewModel()
+                {
+                    CityId = citiesInCountries[i].City.Cityid,
+                    CityName = citiesInCountries[i].City.Cityname,
+                    CountryId = citiesInCountries[i].Country.Countryid
+                };
+            }
+            var countryItemsViewModel = new CountryItemViewModel[countries.Count];
+            for (int i = 0; i < countries.Count; i++)
+            {
+                countryItemsViewModel[i] = new CountryItemViewModel()
+                {
+                    CountryId = countries[i].Countryid,
+                    CountryName = countries[i].Countryname
+                };
+            }
+
+            var viewModel = new RestaurantEditViewModel()
+            {
+                RestaurantId = restaurant.Restaurantid,
+                RestaurantName = restaurant.Restaurantname,
+                Street = restaurant.Street,
+                HouseNumber = restaurant.Housenum,
+                Cities = cityItemsViewModel,
+                Countries = countryItemsViewModel,
+                SelectedCityId = restaurant.PostcodeNavigation.Cityincountry.City.Cityid,
+                SelectedCountryId = restaurant.PostcodeNavigation.Cityincountry.Country.Countryid
+            };
+
+            return View(viewModel);
         }
 
         // POST: RestaurantsController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<ActionResult> Edit(RestaurantEditViewModel viewModel)
         {
-            try
+            //try
+            //{
+            //    //var restaurant = await _context.Restaurants.SingleOrDefaultAsync()
+            //}
+            if (ModelState.IsValid)
             {
                 return RedirectToAction(nameof(Index));
             }
-            catch
+            else
             {
                 return View();
             }
