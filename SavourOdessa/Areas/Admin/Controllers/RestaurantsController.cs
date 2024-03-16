@@ -19,6 +19,7 @@ namespace SavourOdessa.Areas.Admin.Controllers
         public async Task<IActionResult> Index()
         {
             var restauranrs = await _context.Restaurants
+                                            .OrderBy(r => r.Restaurantid)
                                             .ToListAsync();
             List<RestaurantListItemViewModel> restaurantListViewModel = new();
             foreach (var restaurant in restauranrs)
@@ -70,27 +71,57 @@ namespace SavourOdessa.Areas.Admin.Controllers
                 };
             }
 
+            var locale = citiesInCountries.First();
+
             var viewModel = new RestaurantEditViewModel()
             {
+                SelectedCityId = locale.City.Cityid,
+                SelectedCountryId = locale.Country.Countryid,
                 Cities = cityItemsViewModel,
                 Countries = countryItemsViewModel
             };
-            return View("Edit");
+            return View("Edit", viewModel);
         }
 
         // POST: RestaurantsController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<ActionResult> Create(RestaurantEditViewModel viewModel)
         {
-            try
+            if (ModelState.IsValid)
             {
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    var cityincountry = await _context.Cityincountries
+                                            .Include(c => c.Postcodes)
+                                            .FirstOrDefaultAsync(c => c.Cityid == viewModel.SelectedCityId && c.Countryid == viewModel.SelectedCountryId);
+                    var owner = await _context.Systemusers.FirstAsync();
+                    var postcode = cityincountry?.Postcodes.FirstOrDefault()?.Postcode1;
+                    if (cityincountry == null || postcode == null)
+                        throw new Exception("Address not found");
+                    var restaurant = new Restaurant()
+                    {
+                        Restaurantname = viewModel.RestaurantName,
+                        Street = viewModel.Street,
+                        Housenum = viewModel.HouseNumber,
+                        Postcode = postcode,
+                        Ownerid = owner.Userid
+                    };
+                    await _context.AddAsync(restaurant);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception e)
+                {
+                    ModelState.AddModelError("", e.Message);
+                }
             }
-            catch
+            if(viewModel.Countries.Length == 0 || viewModel.Cities.Length == 0)
             {
-                return View();
+                viewModel.Cities = await GetCityItemsAsync();
+                viewModel.Countries = await GetCountryItemsAsync();
             }
+            return View("Edit", viewModel);
         }
 
         // GET: RestaurantsController/Edit/5
@@ -103,36 +134,12 @@ namespace SavourOdessa.Areas.Admin.Controllers
                                     .Include(c => c.PostcodeNavigation.Cityincountry.City)
                                     .FirstOrDefaultAsync(c => c.Restaurantid == id);
 
-            var countries = await _context.Countries
-                                    .ToListAsync();
-
-            var citiesInCountries = await _context.Cityincountries
-                                            .Include(c => c.City)
-                                            .Include(c => c.Country)
-                                            .ToListAsync();
+            
             if (restaurant == null)
             {
                 return NotFound();
             }
-            var cityItemsViewModel = new CityItemViewModel[citiesInCountries.Count];
-            for (int i = 0; i < citiesInCountries.Count;i++)
-            {
-                cityItemsViewModel[i]=new CityItemViewModel()
-                {
-                    CityId = citiesInCountries[i].City.Cityid,
-                    CityName = citiesInCountries[i].City.Cityname,
-                    CountryId = citiesInCountries[i].Country.Countryid
-                };
-            }
-            var countryItemsViewModel = new CountryItemViewModel[countries.Count];
-            for (int i = 0; i < countries.Count; i++)
-            {
-                countryItemsViewModel[i] = new CountryItemViewModel()
-                {
-                    CountryId = countries[i].Countryid,
-                    CountryName = countries[i].Countryname
-                };
-            }
+            
 
             var viewModel = new RestaurantEditViewModel()
             {
@@ -140,8 +147,8 @@ namespace SavourOdessa.Areas.Admin.Controllers
                 RestaurantName = restaurant.Restaurantname,
                 Street = restaurant.Street,
                 HouseNumber = restaurant.Housenum,
-                Cities = cityItemsViewModel,
-                Countries = countryItemsViewModel,
+                Cities = await GetCityItemsAsync(),
+                Countries = await GetCountryItemsAsync(),
                 SelectedCityId = restaurant.PostcodeNavigation.Cityincountry.City.Cityid,
                 SelectedCountryId = restaurant.PostcodeNavigation.Cityincountry.Country.Countryid
             };
@@ -152,41 +159,84 @@ namespace SavourOdessa.Areas.Admin.Controllers
         // POST: RestaurantsController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit(RestaurantEditViewModel viewModel)
+        public async Task<ActionResult> Edit(int id,RestaurantEditViewModel viewModel)
         {
-            //try
-            //{
-            //    //var restaurant = await _context.Restaurants.SingleOrDefaultAsync()
-            //}
             if (ModelState.IsValid)
             {
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    var restaurant = await _context.Restaurants
+                                        .FirstOrDefaultAsync(c => c.Restaurantid == id);
+                    if (restaurant == null)
+                        throw new Exception("Restaurant not found");
+
+                    restaurant.Restaurantname = viewModel.RestaurantName;
+                    restaurant.Street = viewModel.Street;
+                    restaurant.Housenum = viewModel.HouseNumber;
+                    var cityincountry = await _context.Cityincountries
+                                    .Include(c => c.Postcodes)
+                                    .FirstOrDefaultAsync(c => c.Cityid == viewModel.SelectedCityId && c.Countryid == viewModel.SelectedCountryId);
+                    var postcode = cityincountry?.Postcodes.FirstOrDefault()?.Postcode1;
+                    if (cityincountry == null || postcode == null)
+                        throw new Exception("Address not found");
+                    restaurant.Postcode = postcode;
+
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception e)
+                {
+                    ModelState.AddModelError("", e.Message);
+                }
+
             }
-            else
+            if (viewModel.Countries.Length == 0 || viewModel.Cities.Length == 0)
             {
-                return View();
+                viewModel.Cities = await GetCityItemsAsync();
+                viewModel.Countries = await GetCountryItemsAsync();
             }
+            return View(viewModel);
+        }
+
+        private async Task<CityItemViewModel[]> GetCityItemsAsync()
+        {
+            var citiesInCountries = await _context.Cityincountries
+                                    .Include(c => c.City)
+                                    .Include(c => c.Country)
+                                    .ToListAsync();
+            var cityItemsViewModel = new CityItemViewModel[citiesInCountries.Count];
+            for (int i = 0; i < citiesInCountries.Count; i++)
+            {
+                cityItemsViewModel[i] = new CityItemViewModel()
+                {
+                    CityId = citiesInCountries[i].City.Cityid,
+                    CityName = citiesInCountries[i].City.Cityname,
+                    CountryId = citiesInCountries[i].Country.Countryid
+                };
+            }
+            return cityItemsViewModel;
+        }
+
+        private async Task<CountryItemViewModel[]> GetCountryItemsAsync()
+        {
+            var countries = await _context.Countries
+                                    .ToListAsync();
+            var countryItemsViewModel = new CountryItemViewModel[countries.Count];
+            for (int i = 0; i < countries.Count; i++)
+            {
+                countryItemsViewModel[i] = new CountryItemViewModel()
+                {
+                    CountryId = countries[i].Countryid,
+                    CountryName = countries[i].Countryname
+                };
+            }
+            return countryItemsViewModel;
         }
 
         // GET: RestaurantsController/Delete/5
         public ActionResult Delete(int id)
         {
             return View();
-        }
-
-        // POST: RestaurantsController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
         }
     }
 }

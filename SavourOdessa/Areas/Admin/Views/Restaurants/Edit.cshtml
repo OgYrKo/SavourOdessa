@@ -4,13 +4,17 @@
     ViewData["Title"] = "Edit";
 }
 
-<h1>Edit</h1>
+<h1>
+    <a style="text-decoration:none" asp-action="Index">←</a>
+    Edit restaurant
+</h1>
 
-<h4>RestaurantEditViewModel</h4>
 <hr />
 <div class="row">
-    <div class="col-md-4">
-        <form method="post">
+    <form method="post">
+
+        <div class="col-md-4">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="RestaurantName" class="control-label"></label>
                 <input asp-for="RestaurantName" class="form-control" />
@@ -31,15 +35,13 @@
             <div class="form-group">
                 <label asp-for="SelectedCityId" class="control-label"></label>
                 <select id="selectedCity" class="form-control" asp-for="SelectedCityId">
-                    @foreach (var city in Model.Cities)
+                    @foreach (var city in Model.Cities.Where(c => c.CountryId == Model.SelectedCountryId).Distinct())
                     {
                         <option value="@city.CityId">@city.CityName</option>
                     }
                 </select>
                 <span asp-validation-for="SelectedCityId" class="text-danger"></span>
             </div>
-
-
             <div class="form-group">
                 <label asp-for="Street" class="control-label"></label>
                 <input asp-for="Street" class="form-control" />
@@ -51,17 +53,16 @@
                 <input asp-for="HouseNumber" class="form-control" />
                 <span asp-validation-for="HouseNumber" class="text-danger"></span>
             </div>
-            <input type="hidden" name="Cities" value="@Json.Serialize(Model.Cities)" />
-            <input type="hidden" name="Countries" value="@Json.Serialize(Model.Countries)" />
-
+            <input type="hidden" asp-for="Cities" />
+            <input type="hidden" asp-for="Countries" />
             <button type="submit" class="btn btn-primary">Save</button>
-        </form>
-    </div>
+        </div>
+        <div class="col-md">
+            <p>Something</p>
+        </div>
+    </form>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
 
 @section Scripts {
     <script>
@@ -84,5 +85,7 @@
         });
 
     </script>
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
