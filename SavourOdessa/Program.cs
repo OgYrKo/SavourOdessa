@@ -8,8 +8,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddDbContext<DataContext>(opts =>
 {
-    opts.UseNpgsql(
-    builder.Configuration["ConnectionStrings:DefaultConnection"]);
+    opts.UseNpgsql(builder.Configuration["ConnectionStrings:DefaultConnection"]);
     opts.EnableSensitiveDataLogging(true);
 });
 
@@ -30,6 +29,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
+
 app.MapControllerRoute(
     name: "MyArea",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");

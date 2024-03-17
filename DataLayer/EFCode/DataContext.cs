@@ -1,10 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using NodaTime;
+using NodaTime.EntityFrameworkCore;
+using NodaTime.Text;
 
 namespace DataLayer.EfClasses;
 
 public partial class DataContext : DbContext
 {
-
     public DataContext(DbContextOptions<DataContext> options)
         : base(options)
     {
@@ -61,6 +64,7 @@ public partial class DataContext : DbContext
     public virtual DbSet<Userrole> Userroles { get; set; }
 
     public virtual DbSet<Workhour> Workhours { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -413,19 +417,22 @@ public partial class DataContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("rating_userid_fkey");
         });
-
+        var pattern = PeriodPattern.Roundtrip;
         modelBuilder.Entity<Repeatrule>(entity =>
         {
             entity.HasKey(e => e.Repeatrulesid).HasName("repeatrules_pkey");
 
             entity.ToTable("repeatrules");
 
-            entity.HasIndex(e => e.Repeatrulesduration, "repeatrules_repeatrulesduration_key").IsUnique();
+            //entity.HasIndex(e => e.Repeatrulesduration, "repeatrules_repeatrulesduration_key").IsUnique();
 
             entity.HasIndex(e => e.Repeatrulestype, "repeatrules_repeatrulestype_key").IsUnique();
 
             entity.Property(e => e.Repeatrulesid).HasColumnName("repeatrulesid");
-            entity.Property(e => e.Repeatrulesduration).HasColumnName("repeatrulesduration");
+            //entity.Property(e => e.Repeatrulesduration).HasColumnName("repeatrulesduration").HasConversion(
+            //    v => pattern.Format(v),
+            //    v => pattern.Parse(v).Value
+            //);
             entity.Property(e => e.Repeatrulestype)
                 .HasColumnType("character varying")
                 .HasColumnName("repeatrulestype");
