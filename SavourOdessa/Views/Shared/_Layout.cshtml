@@ -27,7 +27,10 @@
                     <li><a asp-area="" asp-controller="Restaurants" asp-action="Index">Restaurants</a></li>
                     <!--
                     -->
-                    <li><a asp-area="Admin" asp-controller="Restaurants" asp-action="Index">Services</a></li>
+                    @* @if (User.IsInRole("Admin"))
+                    {
+                        <li><a asp-area="Admin" asp-controller="Restaurants" asp-action="Index">Services</a></li>
+                    } *@
                     <!--
                     -->
                     <li><a href="#about">About</a></li>
@@ -56,7 +59,7 @@
             </ul>
         </div>
     </header>
-    
+
     @RenderBody()
     <footer class="border-top footer">
         <div class="container">

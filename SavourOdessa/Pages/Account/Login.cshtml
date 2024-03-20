@@ -1,0 +1,76 @@
+﻿@page
+@model LoginModel
+<div class="bg-primary text-center text-white p-2"><h4>Log In</h4></div>
+<div class="m-1 text-danger" asp-validation-summary="All"></div>
+<form method="post">
+    <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+    <div class="form-group">
+        <label>UserName</label>
+        <input class="form-control" asp-for="UserName" />
+    </div>
+    <div class="form-group">
+        <label>Password</label>
+        <input asp-for="Password" type="password" class="form-control" />
+    </div>
+    <button class="btn btn-primary mt-2" type="submit">Log In</button>
+</form>
+@functions {
+    public class LoginModel : PageModel
+    {
+        private readonly DataContext _dataContext;
+        private readonly IConfiguration _configuration;
+        public LoginModel(DataContext dataContext, IConfiguration configuration)
+        {
+            _dataContext = dataContext;
+            _configuration = configuration;
+        }
+        [BindProperty]
+        public string UserName { get; set; } = string.Empty;
+        [BindProperty]
+        public string Password { get; set; } = string.Empty;
+        [BindProperty(SupportsGet = true)]
+        public string? ReturnUrl { get; set; }
+        public async Task<IActionResult> OnPostAsync()
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    UpdateConnectionString(UserName, Password);
+                    var role = _dataContext.get_group_name(UserName);
+                    if (role != "guest") 
+                    {
+                        HttpContext httpContext = Request.HttpContext;
+                        httpContext.Session.SetString("Username", UserName);
+                        httpContext.Session.SetString("Password", Password);
+                        httpContext.Session.SetString("Role", role);
+                        await httpContext.Session.CommitAsync();
+
+                        return Redirect(ReturnUrl ?? "/");
+                    }
+                    ModelState.AddModelError("", "You are logged in as a guest");
+
+                }
+                catch
+                {
+                    ModelState.AddModelError("", "Invalid username or password");
+                }
+            }
+            return Page();
+        }
+
+        private void UpdateConnectionString(string username,string password)
+        {
+            var connectionString = _configuration["ConnectionStrings:DefaultConnection"];
+
+            if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(connectionString))
+            {
+                var connectionStringBuilder = new NpgsqlConnectionStringBuilder(connectionString);
+                connectionStringBuilder.Username = username;
+                connectionStringBuilder.Password = password;
+
+                _dataContext.Database.GetDbConnection().ConnectionString = connectionStringBuilder.ConnectionString;
+            }
+        }
+    }
+}

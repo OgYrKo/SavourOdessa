@@ -1,8 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using NodaTime;
-using NodaTime.EntityFrameworkCore;
 using NodaTime.Text;
+
 
 namespace DataLayer.EfClasses;
 
@@ -65,6 +63,11 @@ public partial class DataContext : DbContext
 
     public virtual DbSet<Workhour> Workhours { get; set; }
 
+    [DbFunction("SavourOdessa", "get_group_name")]
+    public string get_group_name(string login)
+    {
+        throw new NotSupportedException();
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -619,6 +622,9 @@ public partial class DataContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("workhours_openingrulesid_fkey");
         });
+
+        modelBuilder.HasDbFunction(typeof(DataContext).GetMethod(nameof(get_group_name), [typeof(int)]))
+            .HasName("get_group_name");
 
         OnModelCreatingPartial(modelBuilder);
     }

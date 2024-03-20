@@ -1,4 +1,5 @@
 ﻿using DataLayer.EfClasses;
+//using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -9,6 +10,7 @@ using System.Collections.Generic;
 namespace SavourOdessa.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    //[Authorize(Roles = "Admin")]
     public class RestaurantsController : Controller
     {
         private readonly DataContext _context;

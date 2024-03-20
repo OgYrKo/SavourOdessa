@@ -5,13 +5,22 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+
 builder.Services.AddDbContext<DataContext>(opts =>
 {
     opts.UseNpgsql(builder.Configuration["ConnectionStrings:DefaultConnection"]);
     opts.EnableSensitiveDataLogging(true);
 });
-
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(
+        opts =>
+        {
+            opts.IdleTimeout = TimeSpan.FromMinutes(30);
+            opts.Cookie.IsEssential = true;
+        }
+    ) ;
 var app = builder.Build();
 
 
@@ -23,12 +32,14 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseSession();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseAuthorization();
+//app.UseMiddleware<ConnectionStringMiddleware>();
 
 app.MapControllerRoute(
     name: "MyArea",
@@ -37,6 +48,6 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
+app.MapRazorPages();
 app.MapBlazorHub();
 app.Run();
