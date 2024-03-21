@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var role = Context.Session.GetString("Role");
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -27,16 +30,20 @@
                     <li><a asp-area="" asp-controller="Restaurants" asp-action="Index">Restaurants</a></li>
                     <!--
                     -->
-                    @* @if (User.IsInRole("Admin"))
+                    @if (role!=null && role.Equals("admin"))
                     {
                         <li><a asp-area="Admin" asp-controller="Restaurants" asp-action="Index">Services</a></li>
-                    } *@
-                    <!--
-                    -->
-                    <li><a href="#about">About</a></li>
-                    <!--
-                    -->
+                    }
                     <li><a href="#contact">Contact</a></li>
+                    @if (role == null || (role != null && role.Equals("guest")))
+                    {
+                        <li><a href="/Account/Login">Login</a></li>
+                    }
+                    else
+                    {
+                        <li><a href="/Account/Logout">Logout</a></li>
+                    }
+                    
                 </ul>
             </div>
         </nav>

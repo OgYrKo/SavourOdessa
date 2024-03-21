@@ -1,42 +1,36 @@
 ﻿@page
-@model LoginModel
+@model RegisterModel
 <div class="d-flex align-items-center justify-content-center" style="min-height: 80vh;">
     <div>
-        <div class="text-center text-white p-2" style="background-color:#CAE2E0"><h4>Log In</h4></div>
-        <div class="m-1 text-danger" asp-validation-summary="All"></div>
+        <div class="text-center text-white p-2" style="background-color:#CAE2E0"><h4>Registration</h4></div>
+        <div class="m-1 text-danger" asp-validation-summary="ModelOnly"></div>
         <form method="post">
             <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
             <div class="form-group">
                 <label>UserName</label>
                 <input class="form-control" asp-for="UserName" />
+                <span asp-validation-for="UserName" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label>Password</label>
                 <input asp-for="Password" type="password" class="form-control" />
             </div>
-            <button class="btn btn-primary mt-2 form-control" type="submit" style="background-color:#CAE2E0;border-color:black;">Log In</button>
+            <button class="btn btn-primary mt-2 form-control" type="submit" style="background-color:#CAE2E0;border-color:black;">Register</button>
         </form>
-        <hr />
-        <div class="text-center">
-            <p>I’m new here</p>
-            <a href="/Account/Register">
-                 <button class="btn btn-primary mt-2 form-control" style="background-color:#CAE2E0;border-color:black;">Register</button>
-            </a>
-        </div>
     </div>
-    
+
 </div>
 
 @functions {
     [CustomAuthorize("Guest")]
-    public class LoginModel : PageModel
+    public class RegisterModel : PageModel
     {
         private readonly IConfiguration _configuration;
-        private readonly IDataContextFactory _contextFactory;
-        public LoginModel(IConfiguration configuration, IDataContextFactory contextFactory)
+        private readonly DataContext _context;
+        public RegisterModel(IConfiguration configuration, DataContext context)
         {
             _configuration = configuration;
-            _contextFactory = contextFactory;
+            _context = context;
         }
         [BindProperty]
         public string UserName { get; set; } = string.Empty;
@@ -50,8 +44,8 @@
             {
                 try
                 {
-                    var context = _contextFactory.CreateDbContext(UserName, Password);
-                    var response = context.Users.Where(value => value.Usename == UserName).Select(value => DataContext.get_group_name(value.Usename)).ToList();
+                    await _context.Database.ExecuteSqlRawAsync($"CALL create_new_client('{UserName}', '{Password}');");
+                    var response = _context.Users.Where(value => value.Usename == UserName).Select(value => DataContext.get_group_name(value.Usename)).ToList();
                     string role = response[0];
                     if (role != "guest")
                     {
@@ -66,9 +60,20 @@
                     ModelState.AddModelError("", "You are logged in as a guest");
 
                 }
+                catch (PostgresException e)
+                {
+                    if (e.SqlState == "42710")
+                    {
+                        ModelState.AddModelError("UserName", "This username is already taken");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("", e.Message);
+                    }
+                }
                 catch
                 {
-                    ModelState.AddModelError("", "Invalid username or password");
+                    ModelState.AddModelError("", "Something go wrong");
                 }
             }
             return Page();

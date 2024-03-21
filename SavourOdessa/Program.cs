@@ -1,6 +1,8 @@
 using DataLayer.EfClasses;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using SavourOdessa.Factory;
+using SavourOdessa.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,11 +11,11 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
-//builder.Services.AddDbContext<DataContext>(opts =>
-//{
-//    opts.UseNpgsql(builder.Configuration["ConnectionStrings:DefaultConnection"]);
-//    opts.EnableSensitiveDataLogging(true);
-//});
+builder.Services.AddDbContext<DataContext>(opts =>
+{
+    opts.UseNpgsql(builder.Configuration["ConnectionStrings:DefaultConnection"]);
+    opts.EnableSensitiveDataLogging(true);
+});
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(
         opts =>
@@ -24,6 +26,16 @@ builder.Services.AddSession(
     ) ;
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IDataContextFactory, DataContextFactory>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+})
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+    });
 
 var app = builder.Build();
 
@@ -44,7 +56,7 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-//app.UseMiddleware<ConnectionStringMiddleware>();
+app.UseMiddleware<ConnectionStringMiddleware>();
 
 app.MapControllerRoute(
     name: "MyArea",

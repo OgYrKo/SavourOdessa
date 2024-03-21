@@ -10,7 +10,7 @@ using System.Collections.Generic;
 namespace SavourOdessa.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    //[Authorize(Roles = "Admin")]
+    [CustomAuthorize("Admin")]
     public class RestaurantsController : Controller
     {
         private readonly DataContext _context;

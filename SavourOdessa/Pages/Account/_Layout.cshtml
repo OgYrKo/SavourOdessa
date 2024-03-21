@@ -1,12 +1,88 @@
-﻿<!DOCTYPE html>
-<html>
+﻿@{
+    var role = Context.Session.GetString("Role");
+}
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Identity</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SavourOdessa</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script defer src="~/js/site.js"></script>
     <link href="/lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+    @RenderSection("Styles", false)
 </head>
 <body>
-    <div class="m-2">
-        @RenderBody()
-    </div>
+    <div style="margin-top:60px" />
+    <header>
+        <nav id="navbar">
+            <div class="nav-wrapper">
+                <!-- Navbar Logo -->
+                <div class="logo">
+                    <!-- Logo Placeholder for Illustration -->
+                    <a asp-area="" asp-controller="Home" asp-action="Index"><img width="100px" height="auto" src="~/images/Shared/logo.png"></a>
+                </div>
+
+                <!-- Navbar Links -->
+                <ul id="menu">
+                    <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li><a asp-area="" asp-controller="Restaurants" asp-action="Index">Restaurants</a></li>
+                    <!--
+                    -->
+                    @if (role != null && role.Equals("admin"))
+                    {
+                        <li><a asp-area="Admin" asp-controller="Restaurants" asp-action="Index">Services</a></li>
+                    }
+                    <li><a href="#contact">Contact</a></li>
+                    @if (role == null || (role != null && role.Equals("guest")))
+                    {
+                        <li><a asp-page="/Account/Login">Login</a></li>
+                    }
+                    else
+                    {
+                        <li><a asp-page="/Account/Logout">Logout</a></li>
+                    }
+
+                </ul>
+            </div>
+        </nav>
+
+
+        <!-- Menu Icon -->
+        <div class="menuIcon">
+            <span class="icon icon-bars"></span>
+            <span class="icon icon-bars overlay"></span>
+        </div>
+
+
+        <div class="overlay-menu">
+            <ul id="menu">
+                <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
+                <li><a asp-area="" asp-controller="Restaurants" asp-action="Index">Restaurants</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </header>
+
+    @RenderBody()
+    <footer class="border-top footer">
+        <div class="container">
+            <span>&copy; 2024 - SavourOdessa</span>
+            <a href="https://www.facebook.com"><img src="~/images/Shared/facebook.png" alt="facebook"></a>
+            <a href="https://www.instagram.com"><img src="~/images/Shared/instagram.png" alt="instagram"></a>
+            <a href="https://www.telegram.org"><img src="~/images/Shared/telegram.png" alt="telegram"></a>
+        </div>
+    </footer>
+
+
+
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
