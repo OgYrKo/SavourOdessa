@@ -1,5 +1,6 @@
 using DataLayer.EfClasses;
 using Microsoft.EntityFrameworkCore;
+using SavourOdessa.Factory;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,11 +9,11 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
-builder.Services.AddDbContext<DataContext>(opts =>
-{
-    opts.UseNpgsql(builder.Configuration["ConnectionStrings:DefaultConnection"]);
-    opts.EnableSensitiveDataLogging(true);
-});
+//builder.Services.AddDbContext<DataContext>(opts =>
+//{
+//    opts.UseNpgsql(builder.Configuration["ConnectionStrings:DefaultConnection"]);
+//    opts.EnableSensitiveDataLogging(true);
+//});
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(
         opts =>
@@ -21,6 +22,9 @@ builder.Services.AddSession(
             opts.Cookie.IsEssential = true;
         }
     ) ;
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IDataContextFactory, DataContextFactory>();
+
 var app = builder.Build();
 
 
@@ -39,6 +43,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
+
 //app.UseMiddleware<ConnectionStringMiddleware>();
 
 app.MapControllerRoute(

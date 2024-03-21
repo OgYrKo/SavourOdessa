@@ -17,12 +17,12 @@
 @functions {
     public class LoginModel : PageModel
     {
-        private readonly DataContext _dataContext;
         private readonly IConfiguration _configuration;
-        public LoginModel(DataContext dataContext, IConfiguration configuration)
+        private readonly IDataContextFactory _contextFactory;
+        public LoginModel(IConfiguration configuration, IDataContextFactory contextFactory)
         {
-            _dataContext = dataContext;
             _configuration = configuration;
+            _contextFactory = contextFactory;
         }
         [BindProperty]
         public string UserName { get; set; } = string.Empty;
@@ -36,8 +36,9 @@
             {
                 try
                 {
-                    UpdateConnectionString(UserName, Password);
-                    var role = _dataContext.get_group_name(UserName);
+                    var context = _contextFactory.CreateDbContext(UserName, Password);
+                    var response = context.Users.Where(value => value.Usename == UserName).Select(value => DataContext.get_group_name(value.Usename)).ToList();
+                    string role = response[0];
                     if (role != "guest") 
                     {
                         HttpContext httpContext = Request.HttpContext;
@@ -59,18 +60,5 @@
             return Page();
         }
 
-        private void UpdateConnectionString(string username,string password)
-        {
-            var connectionString = _configuration["ConnectionStrings:DefaultConnection"];
-
-            if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(connectionString))
-            {
-                var connectionStringBuilder = new NpgsqlConnectionStringBuilder(connectionString);
-                connectionStringBuilder.Username = username;
-                connectionStringBuilder.Password = password;
-
-                _dataContext.Database.GetDbConnection().ConnectionString = connectionStringBuilder.ConnectionString;
-            }
-        }
     }
 }

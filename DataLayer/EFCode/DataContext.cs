@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DataLayer.EFClasses;
+using Microsoft.EntityFrameworkCore;
 using NodaTime.Text;
 
 
@@ -62,9 +63,10 @@ public partial class DataContext : DbContext
     public virtual DbSet<Userrole> Userroles { get; set; }
 
     public virtual DbSet<Workhour> Workhours { get; set; }
+    public virtual DbSet<User> Users { get; set; }
 
-    [DbFunction("SavourOdessa", "get_group_name")]
-    public string get_group_name(string login)
+    [DbFunction("get_group_name", "public")]
+    public static string get_group_name(string login)
     {
         throw new NotSupportedException();
     }
@@ -623,7 +625,25 @@ public partial class DataContext : DbContext
                 .HasConstraintName("workhours_openingrulesid_fkey");
         });
 
-        modelBuilder.HasDbFunction(typeof(DataContext).GetMethod(nameof(get_group_name), [typeof(int)]))
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasNoKey();
+
+            entity.ToTable("users");
+
+            entity.Property(e => e.Usesysid)
+                .HasColumnType("oid")
+                .HasColumnName("usesysid");
+            entity.Property(e => e.Rolname)
+                .HasColumnName("rolname")
+                .UseCollation("C");
+
+            entity.Property(e => e.Usename)
+                .HasColumnName("usename")
+                .UseCollation("C");
+        });
+
+        modelBuilder.HasDbFunction(typeof(DataContext).GetMethod(nameof(get_group_name), [typeof(string)]))
             .HasName("get_group_name");
 
         OnModelCreatingPartial(modelBuilder);
