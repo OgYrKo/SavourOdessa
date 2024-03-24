@@ -1,30 +1,95 @@
-﻿@model SavourOdessa.Models.Restaurants.CommentListViewModel
+﻿@model SavourOdessa.Models.Restaurants.CommentViewModel
+@{
+    string role = Context.Session.GetString("Role") ?? "guest";
+}
 <link rel="stylesheet" href="~/css/comment.css" />
 <div class="container justify-content-center" style="margin-top:16px;">
-<h5>Comments:</h5>
+    <h5>Comments:</h5>
+    @*     <div class="row">
+    <div class="col-md-12">
+    <div class="card">
+    <div class="card-body">
+    <h5 class="card-title">Add Comment</h5>
+    <form method="post" action="/comments/add">
+    <div class="form-group">
+    <textarea asp-for="@Model.NewComment.Text" class="form-control" />
+    <span asp-validation-for="@Model.NewComment.Text" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    </div>
+    </div>
+    </div>
+    </div> *@
+
+
+
+
+    <!-- Форма для добавления нового комментария -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Add Comment</h5>
+                    <!-- Надпись о том, кто может добавлять комментарии -->
+                    @if (!role.ToLower().Equals("client"))
+                    {
+
+                        <p class="text-muted">
+                            Only users with role "client" can view comments, but they cannot add new ones.
+                        </p>
+                    }
+                    else
+                    {
+                        @* <form method="post">
+                    <div class="form-group">
+                    <textarea class="form-control" name="NewComment.Text">@Model.NewComment.Text</textarea>
+                    <span asp-validation-for="@Model.NewComment.Text" class="text-danger"></span>
+                    </div>
+                    <input type="hidden" asp-for="RestaurantId"/>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    </form> *@
+                        <div class="m-1 text-danger" asp-validation-summary="All"></div>
+                        @using (Html.BeginForm("AddComment", "Restaurants"))
+                        {
+                            <div class="form-group">
+                                <textarea class="form-control" name="text"></textarea>
+                                @* <span asp-validation-for="text" class="text-danger"></span> *@
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        }
+
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
     <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <ul class="list-unstyled">
-                    @foreach (var comment in Model.Comments)
+                    @for (int i = 0; i < Model.CommentList.Comments.Count; i++)
                     {
                         <li class="media">
                             <span class="round pt-2"><img class="command-img" src="https://img.icons8.com/bubbles/100/000000/groups.png" class="align-self-start mr-3"></span>
                             <div class="media-body">
                                 <div class="row d-flex">
-                                    <h6 class="user pt-2">@comment.UserName</h6>
+                                    <h6 class="user pt-2">@Model.CommentList.Comments[i].UserName</h6>
                                     <div class="ml-auto">
-                                        @if (DateTime.Now.Date == comment.Date.Date)
+                                        @if (DateTime.Now.Date == Model.CommentList.Comments[i].Date.Date)
                                         {
-                                            <p class="text">@comment.Date.ToString("hh:mm")</p>
+                                            <p class="text">@Model.CommentList.Comments[i].Date.ToString("hh:mm")</p>
                                         }
                                         else
                                         {
-                                            <p class="text">@comment.Date</p>
+                                            <p class="text">@Model.CommentList.Comments[i].Date</p>
                                         }
                                     </div>
                                 </div>
-                                <p class="text">@comment.Text</p>
+                                <p class="text">@Model.CommentList.Comments[i].Text</p>
                         </li>
                     }
                 </ul>

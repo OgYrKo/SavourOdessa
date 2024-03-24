@@ -8,7 +8,7 @@ public partial class Systemuser
 
     public int Userroleid { get; set; }
 
-    public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+    //public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
     public virtual ICollection<Favourite> Favourites { get; set; } = new List<Favourite>();
 

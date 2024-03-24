@@ -1,4 +1,6 @@
-﻿namespace DataLayer.EfClasses;
+﻿using DataLayer.EFClasses;
+
+namespace DataLayer.EfClasses;
 
 public partial class Comment
 {
@@ -14,5 +16,5 @@ public partial class Comment
 
     public virtual Restaurant Restaurant { get; set; } = null!;
 
-    public virtual Systemuser User { get; set; } = null!;
+    public virtual User User { get; set; } = null!;
 }

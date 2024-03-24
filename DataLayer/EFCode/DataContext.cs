@@ -55,9 +55,7 @@ public partial class DataContext : DbContext
     public virtual DbSet<Restaurantstaff> Restaurantstaffs { get; set; }
 
     public virtual DbSet<Restauranttable> Restauranttables { get; set; }
-
     public virtual DbSet<Systemuser> Systemusers { get; set; }
-
     public virtual DbSet<Tablereservation> Tablereservations { get; set; }
 
     public virtual DbSet<Userrole> Userroles { get; set; }
@@ -135,7 +133,7 @@ public partial class DataContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Comments)
                 .HasForeignKey(d => d.Userid)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("comment_userid_fkey");
+                .HasConstraintName("trigger_check_user_existence");
         });
 
         modelBuilder.Entity<Country>(entity =>
@@ -627,7 +625,9 @@ public partial class DataContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasNoKey();
+            //entity.HasNoKey();
+            entity.HasKey(e => e.Usesysid).HasName("usesysid");
+
 
             entity.ToTable("users");
 
@@ -638,7 +638,7 @@ public partial class DataContext : DbContext
                 .HasColumnName("rolname")
                 .UseCollation("C");
 
-            entity.Property(e => e.Usename)
+            entity.Property(e => e.Username)
                 .HasColumnName("usename")
                 .UseCollation("C");
         });

@@ -45,7 +45,7 @@
                 try
                 {
                     await _context.Database.ExecuteSqlRawAsync($"CALL create_new_client('{UserName}', '{Password}');");
-                    var response = _context.Users.Where(value => value.Usename == UserName).Select(value => DataContext.get_group_name(value.Usename)).ToList();
+                    var response = _context.Users.Where(value => value.Username == UserName).Select(value => DataContext.get_group_name(value.Username)).ToList();
                     string role = response[0];
                     if (role != "guest")
                     {

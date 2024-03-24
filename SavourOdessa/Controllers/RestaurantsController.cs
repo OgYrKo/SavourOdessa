@@ -1,6 +1,8 @@
 ﻿using DataLayer.EfClasses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using Npgsql;
 using SavourOdessa.Models.Restaurants;
 using ServiceLayer.RestaurantServices;
 
@@ -45,38 +47,89 @@ namespace SavourOdessa.Controllers
                                     .Include(r => r.PostcodeNavigation.Cityincountry.Country)
                                     .FirstOrDefaultAsync(r => r.Restaurantid == id)
                                     .Result;
-            if(restaurant == null) return NotFound();
+            if (restaurant == null) return NotFound();
             var comments = _context.Comments
                                     .Include(c => c.User)
                                     .Where(c => c.Restaurantid == id)
                                     .ToArrayAsync()
                                     .Result;
-            var commentsDto = new CommentListItemViewModel[comments.Length];
+
+            var commentsList = new List<CommentListItemViewModel>(comments.Length);
             for (int i = 0; i < comments.Length; i++)
             {
-                commentsDto[i] = new CommentListItemViewModel(comments[i].User.Username,comments[i].Commentdate, comments[i].Commenttext);
+                commentsList.Add(new CommentListItemViewModel(comments[i].User.Username, comments[i].Commentdate, comments[i].Commenttext));
             }
+            var commentViewModel = new CommentViewModel() { RestaurantId = id, CommentList = new CommentListViewModel(commentsList)};
 
-            if (restaurant == null) return NotFound();
-            
 
             var openingHours = GetOpeningHours(DateTime.Now);
-            
 
-            
-            return View(new RestaurantDetailViewModel(restaurant.Restaurantid,
+            var viewModel = new RestaurantDetailViewModel(restaurant.Restaurantid,
                                                             restaurant.Restaurantname,
                                                             GetAddress(restaurant),
                                                             GetImages(restaurant.Restaurantname).ToArray(),
                                                             await GetAverage(restaurant),
-                                                            openingHours.Start<=DateTime.Now&&DateTime.Now<=openingHours.End,
+                                                            openingHours.Start <= DateTime.Now && DateTime.Now <= openingHours.End,
                                                             openingHours.Start,
                                                             openingHours.End,
-                                                            new CommentListViewModel(commentsDto)));
+                                                            commentViewModel);
+
+            var restaurantDetailViewModelJson = JsonConvert.SerializeObject(viewModel);
+            TempData["RestaurantDetailViewModel"] = restaurantDetailViewModelJson;
+            //TempData["ViewModel"] = viewModel;
+            return View(viewModel);
+        }
+        [HttpPost]
+        [CustomAuthorize("Client")]
+        public async Task<ActionResult> AddComment(string text)
+        {
+            var restaurantDetailViewModelJson = (string)TempData["RestaurantDetailViewModel"]!;
+            var viewModel = JsonConvert.DeserializeObject<RestaurantDetailViewModel>(restaurantDetailViewModelJson)!;
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    //var viewModel = TempData["ViewModel"] as RestaurantDetailViewModel;
+
+                    
+
+                    var date = DateTime.Now;
+                    var userName = HttpContext.Session.GetString("Username");
+                    var user = await _context.Users.Where(u => u.Username == userName).FirstAsync();
+                    await AddCommentToDb(text, user.Usesysid, viewModel.RestaurantId);
+                    viewModel.CommentViewModel.AddComment(new CommentListItemViewModel() { UserName = userName, Date = date,Text = text }) ;
+                }
+                catch(PostgresException e) 
+                {
+                    ModelState.AddModelError("", e.MessageText);
+                }
+                catch (Exception e)
+                {
+                    ModelState.AddModelError("", e.Message);
+                }
+            }
+
+            restaurantDetailViewModelJson = JsonConvert.SerializeObject(viewModel);
+            TempData["RestaurantDetailViewModel"] = restaurantDetailViewModelJson;
+            return View("Details", viewModel);
+        }
+
+
+        private async Task AddCommentToDb(string text, int userId, int restaurantId)
+        {
+            var comment = new Comment
+            {
+                Commentdate = DateTime.Now,
+                Commenttext = text,
+                Userid = userId,
+                Restaurantid = restaurantId
+            };
+            _context.Comments.Add(comment);
+            await _context.SaveChangesAsync();
         }
 
         //TODO: create a stored procedure for this
-        private (DateTime Start,DateTime End) GetOpeningHours(DateTime date)
+        private (DateTime Start, DateTime End) GetOpeningHours(DateTime date)
         {
             DateTime start = DateTime.Now.Date.AddHours(6);
             DateTime end = DateTime.Now.Date.AddDays(1).AddHours(-1);
@@ -87,12 +140,12 @@ namespace SavourOdessa.Controllers
         {
             string restaurantsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "Restaurants");
             string restaurantPath = Path.Combine(restaurantsPath, restaurantName);
-            if (!Directory.Exists(restaurantPath)) 
-            { 
+            if (!Directory.Exists(restaurantPath))
+            {
                 yield return "~/images/Restaurants/default.png";
-                yield break; 
+                yield break;
             }
-            
+
             string[] images = Directory.GetFiles(restaurantPath, "*.*", SearchOption.AllDirectories);
             foreach (var image in images)
             {
@@ -100,7 +153,7 @@ namespace SavourOdessa.Controllers
             }
         }
 
-            private string GetFirstImage(string restaurantName)
+        private string GetFirstImage(string restaurantName)
         {
             string restaurantsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "Restaurants");
             string restaurantPath = Path.Combine(restaurantsPath, restaurantName);

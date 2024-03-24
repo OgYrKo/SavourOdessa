@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Details";
+    var role = Context.Session.GetString("Role");
 }
 
 @section Styles {
@@ -74,7 +75,7 @@
             <a asp-controller="Booking" asp-action="BookingTables" asp-route-id="@Model.RestaurantId"><i class="far fa-calendar"></i> Book table</a>
 
             @{
-                @await Html.PartialAsync("_Comments", Model.Comments)
+                @await Html.PartialAsync("_Comments", Model.CommentViewModel)
             }
 
         </div>

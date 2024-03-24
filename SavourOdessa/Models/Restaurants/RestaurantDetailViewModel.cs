@@ -5,12 +5,12 @@
         public int RestaurantId { get; set; }
         public string RestaurantName { get; set; } = null!;
         public string Address { get; set; } = null!;
-        public string[] Photos { get; set; }
+        public string[]? Photos { get; set; }
         public double AverageRating { get; set; }
         public bool IsOpened { get; set; }
         public DateTime? OpenTime { get; set; }
         public DateTime? CloseTime { get; set; }
-        public CommentListViewModel Comments { get; set; } = null!;
+        public CommentViewModel CommentViewModel { get; set; } = null!;
 
         public RestaurantDetailViewModel(int restaurantId, 
                                          string restaurantName, 
@@ -19,8 +19,8 @@
                                             double averageRating, 
                                             bool isOpened, 
                                             DateTime? openTime, 
-                                            DateTime? closeTime, 
-                                            CommentListViewModel comments)
+                                            DateTime? closeTime,
+                                            CommentViewModel commentViewModel)
         {
             RestaurantId = restaurantId;
             RestaurantName = restaurantName;
@@ -30,7 +30,7 @@
             IsOpened = isOpened;
             OpenTime = openTime;
             CloseTime = closeTime;
-            Comments = comments;
+            CommentViewModel = commentViewModel;
         }
     }
 }
