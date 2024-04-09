@@ -1,29 +1,40 @@
 ﻿@inject IJSRuntime JSRuntime
 @inject Microsoft.AspNetCore.Components.NavigationManager NavigationManager
+<style>
+    .grid-container {
+        display: grid;
+        align-items: center;
+        justify-items: center;
+    }
+
+</style>
 @if (SelectedTableIndex == -1)
 {
     <h3>Select a table</h3>
-    <div style="width:100vw;height:50vh;border:1px solid grey;">
-        <table width="100%" height="100%">
-            @for (int i = 0; i < TablesCountByY; i++)
+    <div class="grid-container" style="width:100vw;height:50vh;border:1px solid grey;">
+        
+            @for (int i = 0; i < TablesId.GetLength(0); i++)
             {
-                <tr>
-                    @for (int j = 0; j < TablesCountByX; j++)
-                    {
-                        int localI = i; // Локальная переменная для захвата значения i
-                        int localJ = j; // Локальная переменная для захвата значения j
-                        <td style="text-align: center;">
-                            <button class="group-btn btn"
-                                    style="border-color:#90D1CB;color:#90D1CB"
-                                    @onclick="@(() => SelectedTableIndex = TablesId[localJ, localI])">
-                                <p>Table #@Tables[TablesId[localJ, localI]].Tableid</p>
-                                <p>Sits count: @Tables[TablesId[localJ, localI]].Sitscount</p>
+                @for (int j = 0; j < TablesId.GetLength(1); j++)
+                {
+
+                    int localI = i; // Локальная переменная для захвата значения i
+                    int localJ = j; // Локальная переменная для захвата значения j
+                    <div style="grid-area: @(i+1) / @(j+1) ;">
+                        @if (TablesId[localI, localJ] == -1)
+                        {
+                            <button style="border-color: #90D1CB;color: #90D1CB;" class="group-btn btn" disabled>Empty place</button>
+                        }
+                        else
+                        {
+                            <button style="border-color: #90D1CB;color: #90D1CB;" class="group-btn btn" @onclick="@(() => SelectedTableIndex = TablesId[localI, localJ])">
+                                <p>Table #@Tables[TablesId[localI, localJ]].Tableid</p>
+                                <p>Sits count: @Tables[TablesId[localI, localJ]].Sitscount</p>
                             </button>
-                        </td>
-                    }
-                </tr>
+                        }
+                    </div>
+                }
             }
-        </table>
     </div>
 }
 else if (SelectedTableIndex != -1 && SelectedTimeIndex == -1)
@@ -31,7 +42,7 @@ else if (SelectedTableIndex != -1 && SelectedTimeIndex == -1)
     <h3>Select time</h3>
     <input type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" @bind="@SelectedDate" />
     <div class="row">
-        @if(AvailableTime.Count==0)
+        @if (AvailableTime.Count == 0)
         {
             <p>No available time</p>
         }
@@ -114,6 +125,13 @@ else
             TablesCountByY = Math.Max(TablesCountByY, Tables[i].Tablelocation.Y);
         }
         TablesId = new int[(int)TablesCountByX, (int)TablesCountByY];
+        for (int i = 0; i < TablesId.GetLength(0); i++)
+        {
+            for (int j = 0; j < TablesId.GetLength(1); j++)
+            {
+                TablesId[i, j] = -1;
+            }
+        }
         for (int i = 0; i < Tables.Length; i++)
         {
             TablesId[(int)(Tables[i].Tablelocation.X - 1), (int)(Tables[i].Tablelocation.Y - 1)] = i;
@@ -128,7 +146,7 @@ else
         Tablereservation[] tableReservations = Context?.Tablereservations.Where(r => r.Reservationtime.Date == date.Date && r.Tableid == tableId).ToArray() ?? new Tablereservation[] { };
 
         List<(DateTime, bool)> result = new List<(DateTime, bool)>();
-        if (end != null&&start!=null)
+        if (end != null && start != null)
         {
             end = ((DateTime)end).AddHours(-1.5);
             for (DateTime i = (DateTime)start; i < (DateTime)end; i = i.AddMinutes(15))
