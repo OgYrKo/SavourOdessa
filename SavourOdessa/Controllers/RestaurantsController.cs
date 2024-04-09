@@ -62,14 +62,13 @@ namespace SavourOdessa.Controllers
             var commentViewModel = new CommentViewModel() { RestaurantId = id, CommentList = new CommentListViewModel(commentsList)};
 
 
-            var openingHours = GetOpeningHours(DateTime.Now);
+            var openingHours = _context.GetSchedule(restaurant.Restaurantid,DateTime.Now);
 
             var viewModel = new RestaurantDetailViewModel(restaurant.Restaurantid,
                                                             restaurant.Restaurantname,
                                                             GetAddress(restaurant),
                                                             GetImages(restaurant.Restaurantname).ToArray(),
                                                             await GetAverage(restaurant),
-                                                            openingHours.Start <= DateTime.Now && DateTime.Now <= openingHours.End,
                                                             openingHours.Start,
                                                             openingHours.End,
                                                             commentViewModel);
@@ -126,14 +125,6 @@ namespace SavourOdessa.Controllers
             };
             _context.Comments.Add(comment);
             await _context.SaveChangesAsync();
-        }
-
-        //TODO: create a stored procedure for this
-        private (DateTime Start, DateTime End) GetOpeningHours(DateTime date)
-        {
-            DateTime start = DateTime.Now.Date.AddHours(6);
-            DateTime end = DateTime.Now.Date.AddDays(1).AddHours(-1);
-            return (start, end);
         }
 
         private IEnumerable<string> GetImages(string restaurantName)

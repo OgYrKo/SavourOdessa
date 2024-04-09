@@ -69,6 +69,19 @@ public partial class DataContext : DbContext
         throw new NotSupportedException();
     }
 
+    public Schedule GetSchedule(int c_e_Id, DateTime c_date)
+    {
+        //var result = this.Set<Schedule>()
+        //    .FromSqlInterpolated($"SELECT * FROM GetSchedule({c_e_Id}, {c_date})")
+        //    .ToList() as List<Schedule>;
+        string date = c_date.ToString("d");
+        var result = Database.SqlQuery<Schedule>($"SELECT * FROM GetSchedule({c_e_Id},{date}::date)")
+                             .ToList();
+
+        result[0].CurrentDate=c_date;
+        return result[0];
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<City>(entity =>

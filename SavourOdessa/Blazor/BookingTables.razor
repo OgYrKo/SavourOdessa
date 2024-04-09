@@ -31,6 +31,10 @@ else if (SelectedTableIndex != -1 && SelectedTimeIndex == -1)
     <h3>Select time</h3>
     <input type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" @bind="@SelectedDate" />
     <div class="row">
+        @if(AvailableTime.Count==0)
+        {
+            <p>No available time</p>
+        }
         @for (int i = 0; i < AvailableTime.Count; i++)
         {
             var (time, available) = AvailableTime[i];
@@ -47,12 +51,12 @@ else if (SelectedTableIndex != -1 && SelectedTimeIndex == -1)
     </div>
     <button @onclick="@(() => SelectedTableIndex = -1)">Go back</button>
 }
-else if (IsBooked==true)
+else if (IsBooked == true)
 {
     <h3>Table booked successfully</h3>
     <button @onclick="@ReloadPage">Book another table</button>
 }
-else if(IsBooked==false)
+else if (IsBooked == false)
 {
     <h3>Something went wrong</h3>
     <button @onclick="@ReloadPage">Try again</button>
@@ -120,23 +124,26 @@ else
     {
         int tableId = Tables[SelectedTableIndex].Tableid;
         DateTime date = SelectedDate.Date;
-        var (start, end) = GetOpeningHours(date);
+        var (start, end) = Context.GetSchedule(RestaurantId, date);
         Tablereservation[] tableReservations = Context?.Tablereservations.Where(r => r.Reservationtime.Date == date.Date && r.Tableid == tableId).ToArray() ?? new Tablereservation[] { };
 
         List<(DateTime, bool)> result = new List<(DateTime, bool)>();
-        end = end.AddHours(-1.5);
-        for (DateTime i = start; i < end; i = i.AddMinutes(15))
+        if (end != null&&start!=null)
         {
-            if (i < DateTime.Now)
+            end = ((DateTime)end).AddHours(-1.5);
+            for (DateTime i = (DateTime)start; i < (DateTime)end; i = i.AddMinutes(15))
             {
-                result.Add((i, false));
+                if (i < DateTime.Now)
+                {
+                    result.Add((i, false));
+                }
+                else if (tableReservations.Any(r => r.Reservationtime <= i && i < r.Reservationtime + r.Duration))
+                {
+                    result.Add((i, false));
+                }
+                else
+                    result.Add((i, true));
             }
-            else if (tableReservations.Any(r => r.Reservationtime <= i && i < r.Reservationtime + r.Duration))
-            {
-                result.Add((i, false));
-            }
-            else
-                result.Add((i, true));
         }
         AvailableTime = result;
     }
@@ -162,15 +169,6 @@ else
             IsBooked = false;
         }
     }
-
-
     private void ReloadPage() => NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
 
-    //TODO: create a stored procedure for this
-    private (DateTime Start, DateTime End) GetOpeningHours(DateTime date)
-    {
-        DateTime start = date.AddHours(6);
-        DateTime end = date.AddDays(1).AddHours(-1);
-        return (start, end);
-    }
 }
