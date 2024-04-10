@@ -14,11 +14,11 @@ public partial class Systemuser
 
     public virtual ICollection<Rating> Ratings { get; set; } = new List<Rating>();
 
-    public virtual ICollection<Restaurant> Restaurants { get; set; } = new List<Restaurant>();
+    //public virtual ICollection<Restaurant> Restaurants { get; set; } = new List<Restaurant>();
 
     public virtual ICollection<Restaurantstaff> Restaurantstaffs { get; set; } = new List<Restaurantstaff>();
 
-    public virtual ICollection<Tablereservation> Tablereservations { get; set; } = new List<Tablereservation>();
+    //public virtual ICollection<Tablereservation> Tablereservations { get; set; } = new List<Tablereservation>();
 
     public virtual Userrole Userrole { get; set; } = null!;
 }

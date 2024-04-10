@@ -181,13 +181,14 @@ else
     {
         try
         {
-
+            string username = _httpContextAccessor!.HttpContext!.Session.GetString("Username")!;
+            var user = Context?.Users.First(u => u.Username == username);
             Tablereservation r = new Tablereservation
                 {
                     Tableid = Tables[SelectedTableIndex].Tableid,
                     Reservationtime = AvailableTime[SelectedTimeIndex].Item1,
                     Duration = TimeSpan.FromHours(1),
-                    Userid = Context?.Systemusers.First().Userid ?? 1
+                    Userid = user.Usesysid
                 };
             Context!.Tablereservations.Add(r);
             Context.SaveChanges();

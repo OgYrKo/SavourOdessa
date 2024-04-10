@@ -1,4 +1,6 @@
-﻿namespace DataLayer.EfClasses;
+﻿using DataLayer.EFClasses;
+
+namespace DataLayer.EfClasses;
 
 public partial class Tablereservation
 {
@@ -16,5 +18,5 @@ public partial class Tablereservation
 
     public virtual Restauranttable Table { get; set; } = null!;
 
-    public virtual Systemuser User { get; set; } = null!;
+    public virtual User User { get; set; } = null!;
 }

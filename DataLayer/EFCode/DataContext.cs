@@ -482,10 +482,6 @@ public partial class DataContext : DbContext
                 .HasDefaultValue(false)
                 .HasColumnName("verified");
 
-            entity.HasOne(d => d.Owner).WithMany(p => p.Restaurants)
-                .HasForeignKey(d => d.Ownerid)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("restaurant_ownerid_fkey");
 
             entity.HasOne(d => d.PostcodeNavigation).WithMany(p => p.Restaurants)
                 .HasForeignKey(d => d.Postcode)
@@ -597,10 +593,6 @@ public partial class DataContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("tablereservation_tableid_fkey");
 
-            entity.HasOne(d => d.User).WithMany(p => p.Tablereservations)
-                .HasForeignKey(d => d.Userid)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("tablereservation_userid_fkey");
         });
 
         modelBuilder.Entity<Userrole>(entity =>

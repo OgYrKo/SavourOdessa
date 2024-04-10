@@ -1,4 +1,6 @@
-﻿namespace DataLayer.EfClasses;
+﻿using DataLayer.EFClasses;
+
+namespace DataLayer.EfClasses;
 
 public partial class Restaurant
 {
@@ -24,7 +26,7 @@ public partial class Restaurant
 
     public virtual ICollection<Openingrule> Openingrules { get; set; } = new List<Openingrule>();
 
-    public virtual Systemuser Owner { get; set; } = null!;
+    public virtual User Owner { get; set; } = null!;
 
     public virtual Postcode PostcodeNavigation { get; set; } = null!;
 
