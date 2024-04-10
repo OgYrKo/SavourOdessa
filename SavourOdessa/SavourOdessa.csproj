@@ -19,10 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\Manager\Controllers\" />
     <Folder Include="Areas\Manager\Data\" />
-    <Folder Include="Areas\Manager\Models\" />
-    <Folder Include="Areas\Manager\Views\" />
     <Folder Include="Models\Tables\" />
     <Folder Include="wwwroot\images\Dishes\5\" />
     <Folder Include="wwwroot\images\Restaurants\" />

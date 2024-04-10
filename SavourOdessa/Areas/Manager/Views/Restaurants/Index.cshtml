@@ -1,0 +1,42 @@
+﻿@model IEnumerable<SavourOdessa.Areas.Admin.Models.Restaurants.RestaurantListItemViewModel>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.RestaurantId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.RestaurantName)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.RestaurantId)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.RestaurantName)
+                </td>
+                <td>
+                    @Html.ActionLink("Edit", "Edit", new { id = item.RestaurantId }) |
+                    @Html.ActionLink("Details", "Details", new { id = item.RestaurantId }) |
+                    @Html.ActionLink("Delete", "Delete", new { id = item.RestaurantId })
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

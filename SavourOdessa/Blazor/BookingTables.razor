@@ -12,29 +12,29 @@
 {
     <h3>Select a table</h3>
     <div class="grid-container" style="width:100vw;height:50vh;border:1px solid grey;">
-        
-            @for (int i = 0; i < TablesId.GetLength(0); i++)
-            {
-                @for (int j = 0; j < TablesId.GetLength(1); j++)
-                {
 
-                    int localI = i; // Локальная переменная для захвата значения i
-                    int localJ = j; // Локальная переменная для захвата значения j
-                    <div style="grid-area: @(i+1) / @(j+1) ;">
-                        @if (TablesId[localI, localJ] == -1)
-                        {
-                            <button style="border-color: #90D1CB;color: #90D1CB;" class="group-btn btn" disabled>Empty place</button>
-                        }
-                        else
-                        {
-                            <button style="border-color: #90D1CB;color: #90D1CB;" class="group-btn btn" @onclick="@(() => SelectedTableIndex = TablesId[localI, localJ])">
-                                <p>Table #@Tables[TablesId[localI, localJ]].Tableid</p>
-                                <p>Sits count: @Tables[TablesId[localI, localJ]].Sitscount</p>
-                            </button>
-                        }
-                    </div>
-                }
+        @for (int i = 0; i < TablesId.GetLength(0); i++)
+        {
+            @for (int j = 0; j < TablesId.GetLength(1); j++)
+            {
+
+                int localI = i; // Локальная переменная для захвата значения i
+                int localJ = j; // Локальная переменная для захвата значения j
+                <div style="grid-area: @(i+1) / @(j+1) ;">
+                    @if (TablesId[localI, localJ] == -1)
+                    {
+                        <button style="border-color: #90D1CB;color: #90D1CB;" class="group-btn btn" disabled>Empty place</button>
+                    }
+                    else
+                    {
+                        <button style="border-color: #90D1CB;color: #90D1CB;" class="group-btn btn" @onclick="@(() => SelectedTableIndex = TablesId[localI, localJ])">
+                            <p>Table #@Tables[TablesId[localI, localJ]].Tableid</p>
+                            <p>Sits count: @Tables[TablesId[localI, localJ]].Sitscount</p>
+                        </button>
+                    }
+                </div>
             }
+        }
     </div>
 }
 else if (SelectedTableIndex != -1 && SelectedTimeIndex == -1)
@@ -72,7 +72,7 @@ else if (IsBooked == false)
     <h3>Something went wrong</h3>
     <button @onclick="@ReloadPage">Try again</button>
 }
-else
+else if (IsUser)
 {
     <h3>Is everything correct?</h3>
     <p>Book table #@Tables[SelectedTableIndex].Tableid for @Tables[SelectedTableIndex].Sitscount persons on @AvailableTime[SelectedTimeIndex].Item1.ToString("d") at @AvailableTime[SelectedTimeIndex].Item1.ToString("t")</p>
@@ -80,10 +80,21 @@ else
     <button @onclick="@BookTable">Book</button>
     <button @onclick="@(() => SelectedTimeIndex = -1)">Go back</button>
 }
+else
+{
+    <h3>Log in as a client to continue</h3>
+    <button @onclick="@(() => SelectedTimeIndex = -1)">Go back</button>
+}
 
 @code {
     [Inject]
     public DataContext? Context { get; set; }
+    [Inject]
+    private IHttpContextAccessor? _httpContextAccessor { get; set; }
+    public bool IsUser
+    {
+        get => _httpContextAccessor!.HttpContext!.Session.GetString("Role") == "client";
+    }
     public bool? IsBooked { get; set; } = null;
     [Parameter]
     public int RestaurantId { get; set; }

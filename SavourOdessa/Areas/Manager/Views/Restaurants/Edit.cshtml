@@ -1,0 +1,222 @@
+﻿@model SavourOdessa.Areas.Admin.Models.Restaurants.RestaurantEditViewModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>
+    <a style="text-decoration:none" asp-action="Index">←</a>
+    Edit restaurant
+</h1>
+
+<hr />
+<form method="post">
+    <div class="row">
+
+        <div class="col-md-4">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="RestaurantName" class="control-label"></label>
+                <input asp-for="RestaurantName" class="form-control" />
+                <span asp-validation-for="RestaurantName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="SelectedCountryId" class="control-label"></label>
+                <select id="selectedCountry" class="form-control" asp-for="SelectedCountryId">
+                    @for (int i=0;i< Model.Countries!.Length;i++)
+                    {
+                        <option value="@Model.Countries[i].CountryId">@Model.Countries[i].CountryName</option>
+                    }
+                </select>
+                <span asp-validation-for="SelectedCountryId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="SelectedCityId" class="control-label"></label>
+                <select id="selectedCity" class="form-control" asp-for="SelectedCityId">
+                    @foreach (var city in Model.Cities!.Where(c => c.CountryId == Model.SelectedCountryId).Distinct())
+                    {
+                        <option value="@city.CityId">@city.CityName</option>
+                    }
+                </select>
+                <span asp-validation-for="SelectedCityId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Street" class="control-label"></label>
+                <input asp-for="Street" class="form-control" />
+                <span asp-validation-for="Street" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="HouseNumber" class="control-label"></label>
+                <input asp-for="HouseNumber" class="form-control" />
+                <span asp-validation-for="HouseNumber" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md">
+            <div style="margin:auto 0">
+                <div style="border:solid black">
+                    <p>Time rules</p>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Start date</th>
+                                <th>Is close</th>
+                                <th>Start time</th>
+                                <th>End time</th>
+                                <th>Repeat rule</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timeRules">
+                            @for (int i = 0; i < Model.TimeRules!.Count; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="hidden" asp-for="@Model.TimeRules[i].Id" />
+                                        <input type="date" asp-for="@Model.TimeRules[i].StartDate" class="form-control" />
+                                        <span asp-validation-for="@Model.TimeRules[i].StartDate" class="text-danger"></span>
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" asp-for="@Model.TimeRules[i].IsClosed" value="true" onchange="toggleTimeInputs(this)" /> 
+                                         <span asp-validation-for="@Model.TimeRules[i].IsClosed" class="text-danger"></span>
+                                    </td>
+                                    <td>
+                                        <input type=@(Model.TimeRules[i].IsClosed?"hidden":"time") asp-for="@Model.TimeRules[i].StartTime" class="form-control" />
+                                        <span asp-validation-for="@Model.TimeRules[i].StartTime" class="text-danger"></span>
+
+                                    </td>
+                                    <td>
+                                        <input type=@(Model.TimeRules[i].IsClosed?"hidden":"time") asp-for="@Model.TimeRules[i].EndTime" class="form-control" />
+                                        <span asp-validation-for="@Model.TimeRules[i].EndTime" class="text-danger"></span>
+
+                                    </td>
+                                    <td>
+                                        <select class="form-control" asp-for="@Model.TimeRules[i].SelectedRepeatRuleId">
+                                            @for (int j=0;j< Model.RepeatRules!.Length;j++)
+                                            {
+                                                <option value="@Model.RepeatRules[j].RepeatRuleId">@Model.RepeatRules[j].RepeatRuleName</option>
+                                            }
+                                        </select>
+                                        <span asp-validation-for="@Model.TimeRules[i].SelectedRepeatRuleId" class="text-danger"></span>
+
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn btn-primary" onclick="addTimeRule()">Add</button>
+                    <button type="button" class="btn btn-danger" onclick="removeTimeRule()">Remove</button>
+                </div>
+
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+</form>
+
+
+@section Scripts {
+    <script>
+        document.getElementById("selectedCountry").addEventListener("change", function () {
+            var countryId = parseInt(this.value);
+            var cities = @Html.Raw(Json.Serialize(Model.Cities));
+            var cityDropdown = document.getElementById("selectedCity");
+            cityDropdown.innerHTML = ""; // Очищаем список городов
+
+            console.log("Filter by country id:\n");
+            // Фильтруем города по выбранной стране и добавляем их в список
+            cities.filter(function (city) {
+                return city.countryId == countryId;
+            }).forEach(function (city) {
+                var option = document.createElement("option");
+                option.value = city.cityId;
+                option.textContent = city.cityName;
+                cityDropdown.appendChild(option);
+            });
+        });
+
+        var tableRowsCount = @Model.TimeRules.Count;
+        // Скрытый HTML-шаблон строки таблицы
+        function createRowWithId(id) {
+            var newRow = document.createElement("tr");
+            var today = new Date().toISOString().split('T')[0];
+            newRow.innerHTML = `
+                        <td>
+                            <input type="hidden" data-val="true" id="TimeRules_${id}__Id" name="TimeRules[${id}].Id" value="0">
+                            <input type="date" class="form-control" data-val="true" data-val-required="The StartDate field is required." id="TimeRules_${id}__StartDate" name="TimeRules[${id}].StartDate" value="${today}"><input name="__Invariant" type="hidden" value="TimeRules[${id}].StartDate">
+                            <span class="text-danger field-validation-valid" data-valmsg-for="TimeRules[${id}].StartDate" data-valmsg-replace="true"></span>
+                        </td>
+                        <td>
+                            <input type="checkbox" onchange="toggleTimeInputs(this)" data-val="true" data-val-required="The IsClosed field is required." id="TimeRules_${id}__IsClosed" name="TimeRules[${id}].IsClosed" value="true">
+                            <span class="text-danger field-validation-valid" data-valmsg-for="TimeRules[${id}].IsClosed" data-valmsg-replace="true"></span>
+                        </td>
+                        <td>
+                            <input type="time" class="form-control" data-val="true" data-val-required="The StartTime field is required." id="TimeRules_${id}__StartTime" name="TimeRules[${id}].StartTime" value="09:00">
+                            <input name="__Invariant" type="hidden" value="TimeRules[${id}].StartTime">
+                            <span class="text-danger field-validation-valid" data-valmsg-for="TimeRules[${id}].StartTime" data-valmsg-replace="true"></span>
+                        </td>
+                        <td>
+                            <input type="time" class="form-control" data-val="true" data-val-required="The EndTime field is required." id="TimeRules_${id}__EndTime" name="TimeRules[${id}].EndTime" value="22:00">
+                            <input name="__Invariant" type="hidden" value="TimeRules[${id}].EndTime">
+                            <span class="text-danger field-validation-valid" data-valmsg-for="TimeRules[${id}].EndTime" data-valmsg-replace="true"></span>
+                        </td>
+                        <td>
+                            <select class="form-control" data-val="true" data-val-required="The SelectedRepeatRuleId field is required." id="TimeRules_${id}__SelectedRepeatRuleId" name="TimeRules[${id}].SelectedRepeatRuleId">
+                                <option value="1">Не повторять</option>
+                                <option value="2" selected="selected">Каждый день</option>
+                                <option value="3">Каждая неделя</option>
+                                <option value="4">Каждый месяц</option>
+                                <option value="5">Каждый год</option>
+                            </select>
+                            <span class="text-danger field-validation-valid" data-valmsg-for="TimeRules[${id}].SelectedRepeatRuleId" data-valmsg-replace="true"></span>
+                        </td>
+                    `;
+            return newRow;
+        }
+
+
+        function addTimeRule() {
+            // Клонируем шаблон строки таблицы
+            var newRow = createRowWithId(tableRowsCount).cloneNode(true);
+
+            // Добавляем новую строку в таблицу
+            document.getElementById("timeRules").appendChild(newRow);
+            tableRowsCount++;
+        }
+
+        function removeTimeRule() {
+            // Получаем родительскую строку таблицы и удаляем ее
+            var tbody = document.getElementById("timeRules");
+            var lastRow = tbody.lastElementChild;
+            if (lastRow) {
+                tbody.removeChild(lastRow);
+            }
+            tableRowsCount--;
+            var input = document.getElementsByName("TimeRules[" + tableRowsCount + "].IsClosed")[0];
+            console.log(input);
+            if (input) {
+                var parent = input.parentNode;
+                parent.removeChild(input);
+            }
+        }
+        function toggleTimeInputs(checkbox) {
+            // Получаем родительскую строку таблицы
+            var row = checkbox.parentNode.parentNode;
+
+            // Получаем поля StartTime и EndTime
+            var startTimeInput = row.querySelector('input[name$="StartTime"]');
+            var endTimeInput = row.querySelector('input[name$="EndTime"]');
+
+            // Если чекбокс отмечен, скрываем поля StartTime и EndTime, иначе показываем их
+            // startTimeInput.disabled = checkbox.checked;
+            // endTimeInput.disabled = checkbox.checked;
+            startTimeInput.type = checkbox.checked ? "hidden" : "time";
+            endTimeInput.type = checkbox.checked ? "hidden" : "time";
+        }
+
+    </script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
