@@ -1,0 +1,21 @@
+﻿@model SavourOdessa.Areas.Admin.Models.Owners.OwnerEditViewModel
+<div class="d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+    <div>
+        <div class="text-center text-white p-2" style="background-color:#CAE2E0"><h4>Create manager</h4></div>
+        <div class="m-1 text-danger" asp-validation-summary="ModelOnly"></div>
+        <form method="post">
+            <div class="form-group">
+                <label>UserName</label>
+                <input class="form-control" asp-for="Username" />
+                <span asp-validation-for="Username" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input asp-for="Password" type="password" class="form-control" />
+                <span asp-validation-for="Username" class="text-danger"></span>
+            </div>
+            <button class="btn btn-primary mt-2 form-control" type="submit" style="background-color:#CAE2E0;border-color:black;">Create</button>
+        </form>
+    </div>
+
+</div>

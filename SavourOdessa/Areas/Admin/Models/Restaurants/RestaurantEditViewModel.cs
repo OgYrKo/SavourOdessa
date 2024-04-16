@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using DataLayer.EFClasses;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
 namespace SavourOdessa.Areas.Admin.Models.Restaurants
@@ -19,6 +20,8 @@ namespace SavourOdessa.Areas.Admin.Models.Restaurants
         public string HouseNumber { get; set; } = null!;
         public RepeatRuleViewModel[]? RepeatRules { get; set; } = null!;
         public List<TimeRuleViewModel>? TimeRules { get; set; } = null!;
+        public string SelectedUserId { get; set; }= null!;
+        public List<SelectListItem>? Users { get; set; } = null!;
     }
     public class CityItemViewModel
     {

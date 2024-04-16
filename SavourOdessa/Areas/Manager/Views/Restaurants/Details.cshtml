@@ -1,0 +1,76 @@
+﻿@model SavourOdessa.Areas.Manager.Models.Restaurants.DetailsViewModel
+<style>
+    .full-width-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+
+    .date {
+        margin: 0 20px; /* Add some spacing between the arrows and the date */
+    }
+</style>
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div class="full-width-container">
+    <a class="prev" asp-area="Manager" asp-controller="Restaurants" asp-action="Details" asp-route-id="@Model.RestaurantId" asp-route-dayOffset="@(Model.DayOffset-1)">&#10094;</a>
+    <div class="date">@DateTime.Now.AddDays(Model.DayOffset).ToString("d")</div>
+    <a class="next" class="prev" asp-area="Manager" asp-controller="Restaurants" asp-action="Details" asp-route-id="@Model.RestaurantId" asp-route-dayOffset="@(Model.DayOffset+1)">&#10095;</a>
+   
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Reservations.First().ReservationId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Reservations.First().TableId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Reservations.First().Time)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Reservations.First().Duration)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Reservations.First().UserName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Reservations.First().IsCompleted)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Reservations)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ReservationId)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TableId)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Time)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Duration)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.UserName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.IsCompleted)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

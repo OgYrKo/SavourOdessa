@@ -1,0 +1,46 @@
+﻿@model IEnumerable<SavourOdessa.Areas.Admin.Models.Owners.OwnerListItemVIewModel>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Usesysid)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Username)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Restaurants)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Usesysid)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Username)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Restaurants)
+                </td>
+                <td>
+                    @Html.ActionLink("Delete", "Delete", new { id = item.Usesysid })
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

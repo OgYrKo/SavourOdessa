@@ -71,9 +71,6 @@ public partial class DataContext : DbContext
 
     public Schedule GetSchedule(int c_e_Id, DateTime c_date)
     {
-        //var result = this.Set<Schedule>()
-        //    .FromSqlInterpolated($"SELECT * FROM GetSchedule({c_e_Id}, {c_date})")
-        //    .ToList() as List<Schedule>;
         string date = c_date.ToString("d");
         var result = Database.SqlQuery<Schedule>($"SELECT * FROM GetSchedule({c_e_Id},{date}::date)")
                              .ToList();
@@ -81,6 +78,17 @@ public partial class DataContext : DbContext
         result[0].CurrentDate=c_date;
         return result[0];
     }
+
+    public async Task CreateManager(string username, string password)
+    {
+        await Database.ExecuteSqlRawAsync("CALL create_new_user ({0}, {1}, {2});", username, password, "manager");
+    }
+
+    public async Task DeleteUser(string username)
+    {
+        await Database.ExecuteSqlRawAsync("CALL delete_user ({0});", username);
+    }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

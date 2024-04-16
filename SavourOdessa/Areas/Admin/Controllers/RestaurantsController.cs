@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using SavourOdessa.Areas.Admin.Models.Restaurants;
 using System.Collections.Generic;
 
@@ -79,12 +80,16 @@ namespace SavourOdessa.Areas.Admin.Controllers
                         Street = viewModel.Street,
                         Housenum = viewModel.HouseNumber,
                         Postcode = await GetPostcodeAsync(viewModel.SelectedCountryId, viewModel.SelectedCityId),
-                        Ownerid = owner.Userid,
+                        Ownerid = Convert.ToInt32(viewModel.SelectedUserId),
                         Openingrules = GetOpeningrules(viewModel.TimeRules)
                     };
                     await _context.AddAsync(restaurant);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
+                }
+                catch (PostgresException e)
+                {
+                    ModelState.AddModelError("", e.MessageText);
                 }
                 catch (Exception e)
                 {
@@ -118,7 +123,9 @@ namespace SavourOdessa.Areas.Admin.Controllers
                 HouseNumber = restaurant.Housenum,
                 SelectedCityId = restaurant.PostcodeNavigation.Cityincountry.City.Cityid,
                 SelectedCountryId = restaurant.PostcodeNavigation.Cityincountry.Country.Countryid,
-                TimeRules = timeRules
+                TimeRules = timeRules,
+                SelectedUserId = restaurant.Ownerid.ToString()
+
             };
             await AddLists(viewModel);
 
@@ -140,7 +147,7 @@ namespace SavourOdessa.Areas.Admin.Controllers
                     if (restaurant == null)
                         throw new Exception("Restaurant not found");
 
-
+                    restaurant.Ownerid = Convert.ToInt32(viewModel.SelectedUserId);
                     restaurant.Restaurantname = viewModel.RestaurantName;
                     restaurant.Street = viewModel.Street;
                     restaurant.Housenum = viewModel.HouseNumber;
@@ -149,6 +156,10 @@ namespace SavourOdessa.Areas.Admin.Controllers
                     await UpdateTimeRules(id, viewModel.TimeRules);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
+                }
+                catch (PostgresException e)
+                {
+                    ModelState.AddModelError("", e.MessageText);
                 }
                 catch (Exception e)
                 {
@@ -306,6 +317,8 @@ namespace SavourOdessa.Areas.Admin.Controllers
         }
         private async Task AddLists(RestaurantEditViewModel viewModel)
         {
+            if (viewModel.Users == null)
+                viewModel.Users = await GetManagers();
             if (viewModel.Cities == null)
                 viewModel.Cities = await GetCityItemsAsync();
             if (viewModel.Countries == null)
@@ -314,6 +327,21 @@ namespace SavourOdessa.Areas.Admin.Controllers
                 viewModel.TimeRules = new List<TimeRuleViewModel>();
             if (viewModel.RepeatRules == null)
                 viewModel.RepeatRules = await GetRepeatRuleItemsAsync();
+        }
+
+        private async Task<List<SelectListItem>> GetManagers()
+        {
+            var users = await _context.Users.Where(u => u.Rolname.ToLower() == "manager").ToListAsync();
+            var usersViewModel = new List<SelectListItem>();
+            foreach (var user in users)
+            {
+                usersViewModel.Add(new SelectListItem()
+                {
+                    Value = user.Usesysid.ToString(),
+                    Text = user.Username
+                });
+            }
+            return usersViewModel;
         }
         private async Task<RepeatRuleViewModel[]> GetRepeatRuleItemsAsync()
         {

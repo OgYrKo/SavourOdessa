@@ -1,7 +1,9 @@
 ﻿using DataLayer.EfClasses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SavourOdessa.Areas.Admin.Models.Restaurants;
+using Npgsql;
+using SavourOdessa.Areas.Manager.Models.Restaurants;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SavourOdessa.Areas.Manager.Controllers
 {
@@ -20,8 +22,8 @@ namespace SavourOdessa.Areas.Manager.Controllers
             string username = HttpContext.Session.GetString("Username")!;
 
             var restauranrs = await _context.Restaurants
-                                            .Include(r=>r.Owner)
-                                            .Where(r=>r.Owner.Username== username)
+                                            .Include(r => r.Owner)
+                                            .Where(r => r.Owner.Username == username)
                                             .OrderBy(r => r.Restaurantid)
                                             .ToListAsync();
             List<RestaurantListItemViewModel> restaurantListViewModel = new();
@@ -38,62 +40,66 @@ namespace SavourOdessa.Areas.Manager.Controllers
         }
 
         // GET: RestaurantsController/Details/5
-        public ActionResult Details(int id)
+        [HttpGet("Details/{id}")]
+        public async Task<ActionResult> Details(int id)
         {
-            return View();
-        }
-
-        // GET: RestaurantsController/Create
-        public async Task<ActionResult> Create()
-        {
-
-            var citiesInCountries = await _context.Cityincountries
-                                                  .Include(c => c.City)
-                                                  .Include(c => c.Country)
-                                                  .ToListAsync();
-            var locale = citiesInCountries.First();
-            var viewModel = new RestaurantEditViewModel()
+            var reservations = await _context.Tablereservations
+                                    .Include(t => t.Table)
+                                    .Include(t=>t.User)
+                                    .OrderByDescending(t => t.Reservationtime)
+                                    .Where(t => t.Table.Restaurantid == id && t.Reservationtime >= DateTime.Now.Date)
+                                    .ToListAsync();
+            List<ReservationItemViewModel> reservationItems = new();
+            foreach (var reservation in reservations)
             {
-                SelectedCityId = locale.City.Cityid,
-                SelectedCountryId = locale.Country.Countryid,
-                TimeRules = GetDefaultTimeRuleList()
-            };
-            await AddLists(viewModel);
-            return View("Edit", viewModel);
-        }
-
-        // POST: RestaurantsController/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create(RestaurantEditViewModel viewModel)
-        {
-            if (ModelState.IsValid)
-            {
-                try
+                reservationItems.Add(new ReservationItemViewModel()
                 {
-
-                    var owner = await _context.Systemusers.FirstAsync();
-                    var restaurant = new Restaurant()
-                    {
-                        Restaurantname = viewModel.RestaurantName,
-                        Street = viewModel.Street,
-                        Housenum = viewModel.HouseNumber,
-                        Postcode = await GetPostcodeAsync(viewModel.SelectedCountryId, viewModel.SelectedCityId),
-                        Ownerid = owner.Userid,
-                        Openingrules = GetOpeningrules(viewModel.TimeRules)
-                    };
-                    await _context.AddAsync(restaurant);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception e)
-                {
-                    ModelState.AddModelError("", e.Message);
-                }
+                    ReservationId = reservation.Tablereservationid,
+                    TableId = reservation.Tableid,
+                    Time = reservation.Reservationtime,
+                    Duration = reservation.Duration,
+                    UserName = reservation.User.Username,
+                    IsCompleted = reservation.Reservationtime <= DateTime.Now
+                });
             }
+            DetailsViewModel detailsViewModel = new()
+            {
+                RestaurantId = id,
+                DayOffset = 0,
+                Reservations = reservationItems
+            };
+            return View(detailsViewModel);
+        }
+        [HttpGet("Details/{id}/{dayOffset}")]
+        public async Task<ActionResult> Details(int id,int dayOffset)
+        {
 
-            await AddLists(viewModel);
-            return View("Edit", viewModel);
+            var reservations = await _context.Tablereservations
+                                    .Include(t => t.Table)
+                                    .Include(t => t.User)
+                                    .OrderByDescending(t => t.Reservationtime)
+                                    .Where(t => t.Table.Restaurantid == id && t.Reservationtime.Date == DateTime.Now.AddDays(dayOffset).Date)
+                                    .ToListAsync();
+            List<ReservationItemViewModel> reservationItems = new();
+            foreach (var reservation in reservations)
+            {
+                reservationItems.Add(new ReservationItemViewModel()
+                {
+                    ReservationId = reservation.Tablereservationid,
+                    TableId = reservation.Tableid,
+                    Time = reservation.Reservationtime,
+                    Duration = reservation.Duration,
+                    UserName = reservation.User.Username,
+                    IsCompleted = reservation.Reservationtime <= DateTime.Now
+                });
+            }
+            DetailsViewModel detailsViewModel = new()
+            {
+                RestaurantId = id,
+                DayOffset = dayOffset,
+                Reservations = reservationItems
+            };
+            return View(detailsViewModel);
         }
 
         // GET: RestaurantsController/Edit/5
@@ -149,6 +155,10 @@ namespace SavourOdessa.Areas.Manager.Controllers
                     await UpdateTimeRules(id, viewModel.TimeRules);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
+                }
+                catch (PostgresException e)
+                {
+                    ModelState.AddModelError("", e.MessageText);
                 }
                 catch (Exception e)
                 {

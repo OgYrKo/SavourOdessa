@@ -1,8 +1,29 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
 }
+<style>
+    .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Two columns of equal width */
+        align-items: center;
+        gap: 16px; /* Gap between grid items */
+    }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    /* Optional styling for the grid items */
+    .grid-item {
+        text-align: center;
+        padding: 20px;
+    }
+</style>
+<div>
+   
+
+    <div class="grid-container">
+        <div class="grid-item">
+            <h1 style="color: #EECE5A">Looking for something interesting?</h1>
+        </div>
+        <div class="grid-item">
+            <img src="~/images/Shared/home.png" alt="Savour Odessa" >
+        </div>
+    </div>
 </div>
