@@ -8,6 +8,21 @@ html {
     }
 }
 
+.normal-link {
+    color: #DCB938;
+}
+
+    .normal-link:hover {
+        color: #F9E290;
+    }
+
+.delete-link {
+    color: #D2A0B4;
+}
+
+    .delete-link:hover {
+        color: #EBD1DB;
+    }
 
 .dropdown {
     position: relative;

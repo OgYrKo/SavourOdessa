@@ -5,8 +5,7 @@
 }
 
 <h1>
-    <a style="text-decoration:none" asp-action="Index">←</a>
-    Edit restaurant
+    <a style="text-decoration:none;color:#B7CBC7" asp-action="Index">←</a>
 </h1>
 
 <hr />
@@ -105,13 +104,17 @@
                             }
                         </tbody>
                     </table>
-                    <button type="button" class="btn btn-primary" onclick="addTimeRule()">Add</button>
-                    <button type="button" class="btn btn-danger" onclick="removeTimeRule()">Remove</button>
+                    <div style="display:flex;justify-content:center;">
+                        <button type="button" style="background-color:#EECE5A;border-width:inherit;margin:10px;" class="btn btn-primary" onclick="addTimeRule()">Add</button>
+                        <button type="button" style="background-color:#D2A0B4;border-width:inherit;margin:10px;" class="btn btn-primary" onclick="removeTimeRule()">Remove</button>
+                    </div>
                 </div>
 
             </div>
         </div>
-        <button type="submit" class="btn btn-primary">Save</button>
+        <div style="display:flex;justify-content:center;margin:20px;">
+            <button type="submit" style="background-color:#EECE5A;border-width:inherit;" class="btn btn-primary">Save</button>
+        </div>
     </div>
 </form>
 

@@ -4,10 +4,10 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<h1>Owners</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create" class="normal-link">Create New</a>
 </p>
 <table class="table">
     <thead>
@@ -38,7 +38,7 @@
                     @Html.DisplayFor(modelItem => item.Restaurants)
                 </td>
                 <td>
-                    @Html.ActionLink("Delete", "Delete", new { id = item.Usesysid })
+                    <a asp-action="Delete" asp-route-id="@item.Usesysid" class="delete-link">Delete</a>
                 </td>
             </tr>
         }
