@@ -1,6 +1,50 @@
 ﻿@page
 @model RegisterModel
-<div class="d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+<style>
+    .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Two columns of equal width */
+        align-items: center;
+        gap: 16px; /* Gap between grid items */
+    }
+
+    /* Optional styling for the grid items */
+</style>
+
+<div>
+    <div class="grid-container">
+        <div>
+            <img src="~/images/Shared/register.png" alt="Savour Odessa">
+        </div>
+        <div>
+            <div class="d-flex align-items-center justify-content-center" style="min-height: 80vh;  ">
+                <div style="display:inline;width: 600px; max-width: 500px; min-width: 100px;">
+                    <h2 style="text-align: center;">
+                        Registration
+                    </h2>
+                    <div class="m-1 text-danger" asp-validation-summary="ModelOnly"></div>
+                    <form method="post">
+                        <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                        <div class="form-group">
+                            <label>UserName</label>
+                            <input class="form-control" asp-for="UserName" />
+                            <span asp-validation-for="UserName" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input asp-for="Password" type="password" class="form-control" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        <button class="btn btn-primary mt-2 form-control" type="submit" style="background-color:#EECE5A;border-width:inherit;">Register</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@* <div class="d-flex align-items-center justify-content-center" style="min-height: 80vh;">
     <div>
         <div class="text-center text-white p-2" style="background-color:#CAE2E0"><h4>Registration</h4></div>
         <div class="m-1 text-danger" asp-validation-summary="ModelOnly"></div>
@@ -20,7 +64,7 @@
         </form>
     </div>
 
-</div>
+</div> *@
 
 @functions {
     [CustomAuthorize("Guest")]
