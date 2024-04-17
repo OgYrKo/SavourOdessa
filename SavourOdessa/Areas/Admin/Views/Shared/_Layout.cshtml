@@ -31,7 +31,15 @@
                     <li><a asp-area="" asp-controller="Restaurants" asp-action="Index">Restaurants</a></li>
                     <!--
                     -->
-                    <li><a asp-area="Admin" asp-controller="Service" asp-action="Index">Services</a></li>
+                    <li>
+                        <div class="dropdown">
+                            <a>Service</a>
+                            <div class="dropdown-content">
+                                <a asp-area="Admin" asp-controller="Restaurants" asp-action="Index">Restaurants</a>
+                                <a asp-area="Admin" asp-controller="Owners" asp-action="Index">Owners</a>
+                            </div>
+                        </div>
+                    </li>
                     <!--
                     -->
                     <li><a href="#about">About</a></li>
