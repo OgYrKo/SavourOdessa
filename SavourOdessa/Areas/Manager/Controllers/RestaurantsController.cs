@@ -38,6 +38,41 @@ namespace SavourOdessa.Areas.Manager.Controllers
 
             return View(restaurantListViewModel);
         }
+        public async Task<IActionResult> Stats(int id)
+        {
+            return await Stats(id, DateTime.Now.Year);
+        }
+        [HttpGet("Manager/Restaurants/Stats/{id}/{year}")]
+        public async Task<IActionResult> Stats(int id, int year)
+        {
+            var monthlyReservations = await _context.GetMonthlyReservationChanges(id, year);
+            StatsViewModel statsViewModel = new()
+            {
+                RestaurantId = id,
+                Year = year,
+                Month = -1,
+                DailyReservationChanges = null,
+                MonthlyReservationChanges = monthlyReservations
+            };
+
+            return View(statsViewModel);
+        }
+        [HttpGet("Manager/Restaurants/Stats/{id}/{year}/{month}")]
+        public async Task<IActionResult> Stats(int id, int year, int month)
+        {
+            var dailyReservations = await _context.GetDailyReservationChanges(id, year, month);
+            StatsViewModel statsViewModel = new()
+            {
+                RestaurantId = id,
+                Year = year,
+                Month = month,
+                DailyReservationChanges = dailyReservations,
+                MonthlyReservationChanges = null
+            };
+
+            return View(statsViewModel);
+        }
+
 
         // GET: RestaurantsController/Details/5
         [HttpGet("Details/{id}")]
@@ -45,7 +80,7 @@ namespace SavourOdessa.Areas.Manager.Controllers
         {
             var reservations = await _context.Tablereservations
                                     .Include(t => t.Table)
-                                    .Include(t=>t.User)
+                                    .Include(t => t.User)
                                     .OrderByDescending(t => t.Reservationtime)
                                     .Where(t => t.Table.Restaurantid == id && t.Reservationtime >= DateTime.Now.Date)
                                     .ToListAsync();
@@ -71,7 +106,7 @@ namespace SavourOdessa.Areas.Manager.Controllers
             return View(detailsViewModel);
         }
         [HttpGet("Details/{id}/{dayOffset}")]
-        public async Task<ActionResult> Details(int id,int dayOffset)
+        public async Task<ActionResult> Details(int id, int dayOffset)
         {
 
             var reservations = await _context.Tablereservations
@@ -101,6 +136,8 @@ namespace SavourOdessa.Areas.Manager.Controllers
             };
             return View(detailsViewModel);
         }
+
+
 
         // GET: RestaurantsController/Edit/5
         public async Task<IActionResult> Edit(int id)

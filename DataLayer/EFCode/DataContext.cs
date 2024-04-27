@@ -69,14 +69,26 @@ public partial class DataContext : DbContext
         throw new NotSupportedException();
     }
 
-    public Schedule GetSchedule(int c_e_Id, DateTime c_date)
+    public async Task<Schedule> GetSchedule(int c_e_Id, DateTime c_date)
     {
         string date = c_date.ToString("d");
-        var result = Database.SqlQuery<Schedule>($"SELECT * FROM GetSchedule({c_e_Id},{date}::date)")
-                             .ToList();
+        var result = await Database.SqlQuery<Schedule>($"SELECT * FROM GetSchedule({c_e_Id},{date}::date)")
+                             .ToListAsync();
 
         result[0].CurrentDate=c_date;
         return result[0];
+    }
+
+    public async Task<DailyReservationChanges[]> GetDailyReservationChanges(int restaurantId, int year, int month)
+    {
+        return await Database.SqlQuery<DailyReservationChanges>($"SELECT * FROM GetReservationChanges({restaurantId},{year},{month})")
+                                   .ToArrayAsync();
+    }
+
+    public async Task<MonthlyReservationChanges[]> GetMonthlyReservationChanges(int restaurantId, int year)
+    {
+        return await Database.SqlQuery<MonthlyReservationChanges>($"SELECT * FROM GetReservationChanges({restaurantId},{year})")
+                                   .ToArrayAsync();
     }
 
     public async Task CreateManager(string username, string password)

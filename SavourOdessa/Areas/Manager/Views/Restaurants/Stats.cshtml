@@ -1,0 +1,145 @@
+﻿@model SavourOdessa.Areas.Manager.Models.Restaurants.StatsViewModel
+<style>
+    .full-width-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        padding: 10px;
+    }
+
+    .date {
+        margin: 0 20px; /* Add some spacing between the arrows and the date */
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="full-width-container">
+    @if (Model.Month == -1)//monthly
+    {
+        <a class="prev" asp-area="Manager" asp-controller="Restaurants" asp-action="Stats" asp-route-id="@Model.RestaurantId" asp-route-year="@(Model.Year-1)" asp-route-month="">&#10094;</a>
+    }
+    else if (Model.Month > 1)
+    {
+        <a class="prev" asp-area="Manager" asp-controller="Restaurants" asp-action="Stats" asp-route-id="@Model.RestaurantId" asp-route-year="@(Model.Year)" asp-route-month="@(Model.Month-1)">&#10094;</a>
+    }
+    else
+    {
+        <a class="prev" asp-area="Manager" asp-controller="Restaurants" asp-action="Stats" asp-route-id="@Model.RestaurantId" asp-route-year="@(Model.Year-1)" asp-route-month="12">&#10094;</a>
+    }
+    @if (Model.Month != -1)
+    {
+        // Display in the format "Month name, Year number" localized tu US
+
+        @(new DateOnly(Model.Year, Model.Month, 1).ToString("MMMM, yyyy", new System.Globalization.CultureInfo("en-US")))
+    }
+    else
+    {
+        @Model.Year
+    }
+    @if (Model.Month == -1)//monthly
+    {
+        <a class="next" asp-area="Manager" asp-controller="Restaurants" asp-action="Stats" asp-route-id="@Model.RestaurantId" asp-route-year="@(Model.Year+1)" asp-route-month="">&#10095;</a>
+    }
+    else if (Model.Month < 12)
+    {
+        <a class="next" asp-area="Manager" asp-controller="Restaurants" asp-action="Stats" asp-route-id="@Model.RestaurantId" asp-route-year="@(Model.Year)" asp-route-month="@(Model.Month+1)">&#10095;</a>
+    }
+    else
+    {
+        <a class="next" asp-area="Manager" asp-controller="Restaurants" asp-action="Stats" asp-route-id="@Model.RestaurantId" asp-route-year="@(Model.Year+1)" asp-route-month="1">&#10095;</a>
+    }
+
+</div>
+
+
+<canvas id="myChart" height="100vh">Your browser does not support the canvas element.</canvas>
+
+<div style="display:flex;justify-content: center;">
+    <a asp-area="Manager" asp-controller="Restaurants" asp-action="Stats" asp-route-id="@Model.RestaurantId" asp-route-year="@(DateTime.Now.Year)" asp-route-month="">
+        <button type="button" style="background-color:#EECE5A;border-width:inherit;margin:10px;width:100px;" class="btn btn-primary">
+            Monthly
+        </button>
+    </a>
+    <a asp-area="Manager" asp-controller="Restaurants" asp-action="Stats" asp-route-id="@Model.RestaurantId" asp-route-year="@(DateTime.Now.Year)" asp-route-month="@(DateTime.Now.Month)">
+        <button type="button" style="background-color:#EECE5A;border-width:inherit;margin:10px;width:100px;" class="btn btn-primary">
+            Daily
+        </button>
+    </a>
+</div>
+
+<script>
+    // Ваши данные
+
+    var model = @Html.Raw(Json.Serialize(Model));
+    console.log(model);
+    var data;
+    var labels;
+    if (model.month != -1) {
+        data = model.dailyReservationChanges;
+        labels = data.map(entry => entry.day);
+    }
+    else {
+        data = model.monthlyReservationChanges;
+        labels = Array.from({ length: 12 }, (_, i) => {
+            const date = new Date(0);
+            date.setUTCMonth(i);
+            return date.toLocaleDateString('en-US', { month: 'long' });
+        });
+    }
+    console.log(data);
+    console.log(labels);
+
+    var changePercentages = data.map(entry => entry.changePercentage);
+    var numberOfReservations = data.map(entry => entry.numberOfReservations);
+
+    // Создаем график
+    var ctx = document.getElementById('myChart').getContext('2d');
+    var myChart = new Chart(ctx,
+        {
+            type: 'line',
+            options:
+            {
+                plugins:
+                {
+                    legend:
+                    {
+                        display: false
+                    },
+                    tooltip:
+                    {
+                        enabled: true,
+                        callbacks: {
+                            label: function (context) {
+                                return 'Number of Reservations: ' + numberOfReservations[context.dataIndex];
+                            }
+                        }
+                    }
+                },
+                scales:
+                {
+                    y:
+                    {
+                        ticks:
+                        {
+                            callback: value => `${value} %`
+                        }
+                    }
+                }
+            },
+            data:
+            {
+                labels: labels,//отображение по оси Х
+                datasets:
+                    [
+                        {
+                            label: 'Change Percentage',//именование функции
+                            data: changePercentages,//отображение значений по оси Y + на точки на графике
+                            borderColor: '#CAE2E0',
+                            backgroundColor: '#FFB1C1',
+                        }
+                    ]
+            }
+        }
+    );
+</script>

@@ -151,11 +151,11 @@ else
         }
     }
 
-    public void UpdateAvailableTime()
+    public async Task UpdateAvailableTime()
     {
         int tableId = Tables[SelectedTableIndex].Tableid;
         DateTime date = SelectedDate.Date;
-        var (start, end) = Context.GetSchedule(RestaurantId, date);
+        var (start, end) = await Context.GetSchedule(RestaurantId, date);
         Tablereservation[] tableReservations = Context?.Tablereservations.Where(r => r.Reservationtime.Date == date.Date && r.Tableid == tableId).ToArray() ?? new Tablereservation[] { };
 
         List<(DateTime, bool)> result = new List<(DateTime, bool)>();

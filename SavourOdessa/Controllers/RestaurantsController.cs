@@ -62,7 +62,7 @@ namespace SavourOdessa.Controllers
             var commentViewModel = new CommentViewModel() { RestaurantId = id, CommentList = new CommentListViewModel(commentsList)};
 
 
-            var openingHours = _context.GetSchedule(restaurant.Restaurantid,DateTime.Now);
+            var openingHours = await _context.GetSchedule(restaurant.Restaurantid,DateTime.Now);
 
             var viewModel = new RestaurantDetailViewModel(restaurant.Restaurantid,
                                                             restaurant.Restaurantname,
