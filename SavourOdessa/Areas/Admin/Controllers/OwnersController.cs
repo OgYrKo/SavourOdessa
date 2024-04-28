@@ -3,6 +3,7 @@ using DataLayer.EFClasses;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using SavourOdessa.Areas.Admin.Models.Owners;
 
 namespace SavourOdessa.Areas.Admin.Controllers
@@ -21,8 +22,8 @@ namespace SavourOdessa.Areas.Admin.Controllers
         public async Task<ActionResult> Index()
         {
             var owners = await _context.Users
-                                       .Include(u=>u.Restaurants)
-                                       .Where(u=>u.Rolname.ToLower()=="manager")
+                                       .Include(u => u.Restaurants)
+                                       .Where(u => u.Rolname.ToLower() == "manager")
                                        .ToListAsync();
             List<OwnerListItemVIewModel> viewModel = new List<OwnerListItemVIewModel>();
             foreach (var owner in owners)
@@ -31,7 +32,7 @@ namespace SavourOdessa.Areas.Admin.Controllers
                 {
                     Usesysid = owner.Usesysid,
                     Username = owner.Username,
-                    Restaurants = string.Join(", ", owner.Restaurants.Select(r=>r.Restaurantname))
+                    Restaurants = string.Join(", ", owner.Restaurants.Select(r => r.Restaurantname))
                 };
                 viewModel.Add(ownerViewModel);
             }
@@ -59,7 +60,7 @@ namespace SavourOdessa.Areas.Admin.Controllers
                 }
                 return View(viewModel);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ModelState.AddModelError("", ex.Message);
                 return View(viewModel);
@@ -75,7 +76,18 @@ namespace SavourOdessa.Areas.Admin.Controllers
             {
                 return NotFound();
             }
-            await _context.DeleteUser(user.Username);
+            try
+            {
+                await _context.DeleteUser(user.Username);
+            }
+            catch(PostgresException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
             return RedirectToAction(nameof(Index));
         }
 

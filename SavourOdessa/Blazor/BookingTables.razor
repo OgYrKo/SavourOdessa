@@ -71,7 +71,7 @@ else if (IsBooked == true)
 }
 else if (IsBooked == false)
 {
-    <h3>Something went wrong</h3>
+    <h3>@ErrorMessage</h3>
     <button @onclick="@ReloadPage">Try again</button>
 }
 else if (IsUser)
@@ -98,6 +98,7 @@ else
         get => _httpContextAccessor!.HttpContext!.Session.GetString("Role") == "client";
     }
     public bool? IsBooked { get; set; } = null;
+    public string ErrorMessage { get; set; } = "";
     [Parameter]
     public int RestaurantId { get; set; }
 
@@ -113,7 +114,9 @@ else
         {
             _selectedTableIndex = value;
             if (value != -1)
+            {
                 UpdateAvailableTime();
+            }
         }
     }
     public DateTime _selectedDate = DateTime.Now;
@@ -151,11 +154,11 @@ else
         }
     }
 
-    public async Task UpdateAvailableTime()
+    public void UpdateAvailableTime()
     {
         int tableId = Tables[SelectedTableIndex].Tableid;
         DateTime date = SelectedDate.Date;
-        var (start, end) = await Context.GetSchedule(RestaurantId, date);
+        var (start, end) = Context.GetSchedule(RestaurantId, date);
         Tablereservation[] tableReservations = Context?.Tablereservations.Where(r => r.Reservationtime.Date == date.Date && r.Tableid == tableId).ToArray() ?? new Tablereservation[] { };
 
         List<(DateTime, bool)> result = new List<(DateTime, bool)>();
@@ -196,9 +199,19 @@ else
             Context.SaveChanges();
             IsBooked = true;
         }
-        catch
+        catch(Exception ex)
         {
+            Npgsql.PostgresException? pgException = ex.InnerException as Npgsql.PostgresException;
+            if (pgException != null)
+            {
+                ErrorMessage = pgException.MessageText;
+            }
+            else
+            {
+                ErrorMessage = "Something went wrong";
+            }
             IsBooked = false;
+            
         }
     }
     private void ReloadPage() => NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);

@@ -69,11 +69,11 @@ public partial class DataContext : DbContext
         throw new NotSupportedException();
     }
 
-    public async Task<Schedule> GetSchedule(int c_e_Id, DateTime c_date)
+    public Schedule GetSchedule(int c_e_Id, DateTime c_date)
     {
         string date = c_date.ToString("d");
-        var result = await Database.SqlQuery<Schedule>($"SELECT * FROM GetSchedule({c_e_Id},{date}::date)")
-                             .ToListAsync();
+        var result = Database.SqlQuery<Schedule>($"SELECT * FROM GetSchedule({c_e_Id},{date}::date)")
+                             .ToList();
 
         result[0].CurrentDate=c_date;
         return result[0];
@@ -98,7 +98,8 @@ public partial class DataContext : DbContext
 
     public async Task DeleteUser(string username)
     {
-        await Database.ExecuteSqlRawAsync("CALL delete_user ({0});", username);
+        string query = $"DROP ROLE IF EXISTS {username};";
+        await Database.ExecuteSqlRawAsync(query);
     }
 
 
